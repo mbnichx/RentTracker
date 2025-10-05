@@ -1,14 +1,14 @@
-package backend
+package main
 
 import (
 	"database/sql"
 	"log"
+	_ "modernc.org/sqlite"
 	"net/http"
-	// _ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	db, err := sql.Open("sqlite3", "./rt.db")
+	db, err := sql.Open("sqlite", "../rt.db")
 	if err != nil {
 		log.Fatal("open db:", err)
 	}
@@ -25,6 +25,9 @@ func main() {
 	// }
 
 	mux := http.NewServeMux()
+
+	http.HandleFunc("/register", RegisterHandler(db))
+	http.HandleFunc("/login", LoginHandler(db))
 
 	// helpers: POST endpoints for create, GET for listing/single,
 	// PUT for update, DELETE for delete.

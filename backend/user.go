@@ -1,8 +1,9 @@
-package backend
+package main
 
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,13 +11,13 @@ import (
 
 // USERS
 type User struct {
-	UserID           int    `db:"userId" json:"userId"`
-	UserFirstName    string `db:"userFirstName" json:"userFirstName"`
-	UserLastName     string `db:"userLastName" json:"userLastName"`
-	UserEmail        string `db:"userEmail" json:"userEmail"`
-	UserPhoneNumber  string `db:"userPhoneNumber" json:"userPhoneNumber"`
-	UserPasswordHash string `db:"userPasswordHash" json:"-"`
-	UserRole         string `db:"userRole" json:"userRole"`
+	UserID          int    `db:"userId" json:"userId"`
+	UserFirstName   string `db:"userFirstName" json:"userFirstName"`
+	UserLastName    string `db:"userLastName" json:"userLastName"`
+	UserEmail       string `db:"userEmail" json:"userEmail"`
+	UserPhoneNumber string `db:"userPhoneNumber" json:"userPhoneNumber"`
+	UserPassword    string `db:"userPassword" json:"-"`
+	UserRole        string `db:"userRole" json:"userRole"`
 }
 
 // == Handlers ========================================================================
@@ -26,11 +27,14 @@ func CreateUserHandler(db *sql.DB) http.HandlerFunc {
 		var u User
 		if err := json.NewDecoder(r.Body).Decode(&u); err != nil {
 			respondError(w, http.StatusBadRequest, "Invalid request body")
+			log.Print(err)
 			return
 		}
+		log.Print(u)
 
 		err := CreateUser(db, &u)
 		if err != nil {
+			log.Print(err)
 			respondError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -115,7 +119,7 @@ func DeleteUserHandler(db *sql.DB) http.HandlerFunc {
 func CreateUser(db *sql.DB, u *User) error {
 	query := `INSERT INTO users (userFirstName, userLastName, userEmail, userPhoneNumber, userPasswordHash, userRole)
               VALUES (?, ?, ?, ?, ?, ?)`
-	res, err := db.Exec(query, u.UserFirstName, u.UserLastName, u.UserEmail, u.UserPhoneNumber, u.UserPasswordHash, u.UserRole)
+	res, err := db.Exec(query, u.UserFirstName, u.UserLastName, u.UserEmail, u.UserPhoneNumber, u.UserPassword, u.UserRole)
 	if err != nil {
 		return err
 	}
