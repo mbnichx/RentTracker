@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"strconv"
@@ -16,7 +17,7 @@ type User struct {
 	UserLastName    string `db:"userLastName" json:"userLastName"`
 	UserEmail       string `db:"userEmail" json:"userEmail"`
 	UserPhoneNumber string `db:"userPhoneNumber" json:"userPhoneNumber"`
-	UserPassword    string `db:"userPassword" json:"-"`
+	UserPassword    string `db:"userPasswordHash" json:"userPassword"`
 	UserRole        string `db:"userRole" json:"userRole"`
 }
 
@@ -30,9 +31,17 @@ func CreateUserHandler(db *sql.DB) http.HandlerFunc {
 			log.Print(err)
 			return
 		}
-		log.Print(u)
 
-		err := CreateUser(db, &u)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.UserPassword), bcrypt.DefaultCost)
+		if err != nil {
+			log.Print(err)
+			http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+			return
+		}
+
+		u.UserPassword = string(hashedPassword)
+
+		err = CreateUser(db, &u)
 		if err != nil {
 			log.Print(err)
 			respondError(w, http.StatusInternalServerError, err.Error())

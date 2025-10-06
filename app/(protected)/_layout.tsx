@@ -1,5 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { useAuth } from "../../contexts/AuthContext";
+import { Redirect, Slot } from "expo-router";
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -10,7 +12,12 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { isAuthenticated } = useAuth();
 
+  if (!isAuthenticated) {
+    return <Redirect href="./login" />;
+  }
+  
   return (
     <Tabs
       screenOptions={{
@@ -19,7 +26,7 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
-        name="index"
+        name="dashboard"
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,

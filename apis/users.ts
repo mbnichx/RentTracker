@@ -1,10 +1,9 @@
 import apiRequest from "./client";
 
 type User = {
-  userId: number;
   userFirstName: string;
   userLastName: string;
-  userEmailAddress: string;
+  userEmail: string;
   userPhoneNumber: string;
   userPassword: string;
   userRole: string;

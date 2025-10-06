@@ -26,13 +26,25 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	http.HandleFunc("/register", RegisterHandler(db))
-	http.HandleFunc("/login", LoginHandler(db))
+	// Register
+	mux.Handle("/users", CreateUserHandler(db))
+
+	// Login
+	mux.Handle("/login", LoginHandler(db))
+
+	// Dashboard
+	mux.Handle("/overduePayments", GetOverduePaymentsHandler(db))
+	mux.Handle("/maintenanceRequestStatus", GetMaintenanceRequestsHandler(db))
+	mux.Handle("/leaseOverview", GetLeasesHandler(db))
+
+	// Rent
+	mux.Handle("/upcomingPayments", GetUpcomingRentHandler(db))
+	mux.Handle("/payments", CreatePaymentHandler(db))
 
 	// helpers: POST endpoints for create, GET for listing/single,
 	// PUT for update, DELETE for delete.
 	// USERS
-	mux.Handle("/users", CreateUserHandler(db))
+
 	mux.Handle("/users/", GetUserHandler(db))
 	mux.Handle("/users/update", UpdateUserHandler(db))
 	mux.Handle("/users/delete/", DeleteUserHandler(db))
@@ -62,7 +74,6 @@ func main() {
 	mux.Handle("/leases/delete/", DeleteLeaseHandler(db))
 
 	// PAYMENTS
-	mux.Handle("/payments", CreatePaymentHandler(db))
 	mux.Handle("/payments/", GetPaymentHandler(db))
 	mux.Handle("/payments/update", UpdatePaymentHandler(db))
 	mux.Handle("/payments/delete/", DeletePaymentHandler(db))

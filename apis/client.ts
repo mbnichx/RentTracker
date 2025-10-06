@@ -6,6 +6,7 @@ async function apiRequest(
   body?: object
 ) {
   const url = `${BASE_URL}${endpoint}`; // append endpoint to base URL
+  console.log(url)
 
   const options: RequestInit = {
     method,

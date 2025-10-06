@@ -28,39 +28,6 @@ func generateJWT(userID int) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-// POST /register
-func RegisterHandler(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var creds User
-		if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-			log.Print(err)
-			http.Error(w, "Invalid request", http.StatusBadRequest)
-			return
-		}
-		log.Print(creds)
-
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(creds.UserPassword), bcrypt.DefaultCost)
-		if err != nil {
-			log.Print(err)
-			http.Error(w, "Failed to hash password", http.StatusInternalServerError)
-			return
-		}
-
-		creds.UserPassword = string(hashedPassword)
-
-		err = CreateUser(db, &creds)
-		if err != nil {
-			log.Print(err)
-			http.Error(w, "Failed to create user", http.StatusInternalServerError)
-			return
-		}
-
-		token, _ := generateJWT(int(creds.UserID))
-
-		json.NewEncoder(w).Encode(map[string]string{"token": token})
-	}
-}
-
 // POST /login
 func LoginHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -70,13 +37,15 @@ func LoginHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		log.Print("Attempting to log in " + creds.Email + " ...")
+
 		var userId int
-		var email int
 		var hashedPassword string
 
-		err := db.QueryRow("SELECT userId, email, password FROM users WHERE email = ?", creds.Email).Scan(&userId, &email, &hashedPassword)
+		err := db.QueryRow("SELECT userId, userPasswordHash FROM users WHERE userEmail = ?", creds.Email).Scan(&userId, &hashedPassword)
 		if err != nil {
-			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			log.Print(err)
+			http.Error(w, "User does not exist", http.StatusUnauthorized)
 			return
 		}
 
