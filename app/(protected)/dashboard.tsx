@@ -1,13 +1,13 @@
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
-import apiRequest from "../../apis/client"; // 👈 your centralized API request helper
+import { ScrollView, Text, View } from "react-native";
+import apiRequest from "../../apis/client";
+import { styles } from "./style";
 
 export default function DashboardScreen() {
   const [overduePayments, setOverduePayments] = useState<any[]>([]);
   const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([]);
   const [leases, setLeases] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -23,24 +23,11 @@ export default function DashboardScreen() {
         setLeases(leasesRes || []);
       } catch (err) {
         console.error("Dashboard fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
+      } 
     };
 
     fetchDashboardData();
   }, []);
-
-  if (loading) {
-    return (
-      <LinearGradient colors={["#6a11cb", "#2575fc"]} style={styles.gradient}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.loadingText}>Loading dashboard...</Text>
-        </View>
-      </LinearGradient>
-    );
-  }
 
   return (
     <LinearGradient colors={["#6a11cb", "#2575fc"]} style={styles.gradient}>
@@ -61,13 +48,13 @@ export default function DashboardScreen() {
 
                 {/* Right side: rent amount / date, vertically centered */}
                 <View style={styles.rowRight}>
-                  <Text style={styles.amount}>${item.rentAmount}</Text>
+                  <Text style={styles.overdueAmount}>${item.rentAmount.toFixed(2)}</Text>
                 </View>
               </View>
 
             ))
           ) : (
-            <Text style={styles.emptyText}>No overdue payments 🎉</Text>
+            <Text style={styles.emptyText}>No overdue payments</Text>
           )}
 
         </View>
@@ -89,7 +76,7 @@ export default function DashboardScreen() {
               </View>
             ))
           ) : (
-            <Text style={styles.emptyText}>No maintenance requests 🧰</Text>
+            <Text style={styles.emptyText}>No maintenance requests</Text>
           )}
         </View>
 
@@ -116,82 +103,3 @@ export default function DashboardScreen() {
     </LinearGradient>
   );
 }
-
-const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-  scrollContainer: {
-    padding: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 24,
-    marginTop: 50,
-    textAlign: "center",
-  },
-  card: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 12,
-    color: "#333",
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#222",
-  },
-  details: {
-    color: "#555",
-  },
-  amount: {
-    color: "#d32f2f",
-    fontWeight: "bold",
-  },
-  address: {
-    fontSize: 14,
-    color: "#555",
-    marginTop: 2,
-  },
-  emptyText: {
-    fontStyle: "italic",
-    color: "#555",
-  },
-  row: {
-    flexDirection: "row",      // horizontal layout
-    justifyContent: "space-between", // left vs right
-    alignItems: "center",      // vertically center right content
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    paddingVertical: 8,
-  },
-  rowLeft: {
-    flexDirection: "column",   // stack name and address vertically
-    flexShrink: 1,             // allows long addresses to wrap
-  },
-  rowRight: {
-    justifyContent: "center",  // vertically center
-    alignItems: "flex-end",    // right align
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    color: "#fff",
-    marginTop: 10,
-  },
-});

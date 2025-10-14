@@ -1,8 +1,9 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import apiRequest from "../../apis/client";
+import { styles } from "./style";
 
 type RentPayment = {
   firstName: string;
@@ -20,10 +21,14 @@ export default function RentScreen() {
 
   useEffect(() => {
     async function fetchData() {
-      const overdueData = await apiRequest("/overduePayments");
-      setOverdue(overdueData);
-      const upcomingData = await apiRequest("/upcomingPayments");
-      setUpcoming(upcomingData);
+      try {
+        const overdueData = await apiRequest("/overduePayments");
+        setOverdue(overdueData || []);
+        const upcomingData = await apiRequest("/upcomingPayments");
+        setUpcoming(upcomingData || []);
+      } catch (err) {
+        console.error("Rent fetch error:", err);
+      }
     }
     fetchData();
   }, []);
@@ -34,7 +39,7 @@ export default function RentScreen() {
     return date.toLocaleDateString();
   };
 
-  const renderItem = ({ item }: { item: RentPayment }) => {
+  const renderRow = (item: RentPayment, idx: number) => {
     let color = "#000";
     let icon = null;
 
@@ -47,104 +52,52 @@ export default function RentScreen() {
     }
 
     return (
-      <View style={styles.row}>
+      <View key={idx} style={styles.row}>
+        {/* Left side: name + address */}
         <View style={styles.rowLeft}>
           <Text style={styles.name}>{item.firstName} {item.lastName}</Text>
           <Text style={styles.address}>{item.address}{item.unit ? ` #${item.unit}` : ""}</Text>
         </View>
 
+        {/* Right side: amount + date */}
         <View style={styles.rowRight}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             {icon}
             <Text style={{ ...styles.amount, color, marginRight: 8 }}>
               ${item.rentAmount.toFixed(2)}
             </Text>
-           
           </View>
-           <Text style={{ color: "#555", marginRight: 8  }}>{formatDate(item.lastPaymentUnix)}</Text>
+          <Text style={{ color: "#555" }}>{formatDate(item.lastPaymentUnix)}</Text>
         </View>
       </View>
-
     );
   };
 
   return (
     <LinearGradient colors={["#6a11cb", "#2575fc"]} style={styles.gradient}>
-      <FlatList
-        ListHeaderComponent={
-          <>
-            <Text style={styles.title}>Overdue Rent</Text>
-            <View style={styles.card}>
-              <FlatList
-                data={overdue}
-                renderItem={renderItem}
-                keyExtractor={(item, idx) => `overdue-${idx}`}
-              />
-            </View>
-            <Text style={styles.title}>Upcoming Rent</Text>
-            <View style={styles.card}>
-              <FlatList
-                data={upcoming}
-                renderItem={renderItem}
-                keyExtractor={(item, idx) => `upcoming-${idx}`}
-              />
-            </View>
-          </>
-        }
-        data={[]}
-        renderItem={null}
-      />
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.title}>Rent</Text>
+
+        {/* Overdue Section */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Overdue Rent</Text>
+          {overdue.length > 0 ? (
+            overdue.map(renderRow)
+          ) : (
+            <Text style={styles.emptyText}>No overdue rent</Text>
+          )}
+        </View>
+
+        {/* Upcoming Section */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Upcoming Rent</Text>
+          {upcoming.length > 0 ? (
+            upcoming.map(renderRow)
+          ) : (
+            <Text style={styles.emptyText}>No upcoming rent</Text>
+          )}
+        </View>
+      </ScrollView>
     </LinearGradient>
   );
 }
-
-const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-    padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 12,
-    marginTop: 50,
-  },
-  card: {
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    paddingVertical: 8,
-  },
-  rowLeft: {
-    flexDirection: "column",
-    flexShrink: 1,
-  },
-  rowRight: {
-    justifyContent: "center",
-    alignItems: "flex-end",
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#222",
-  },
-  address: {
-    color: "#555",
-  },
-  amount: {
-    fontWeight: "bold",
-  },
-});

@@ -1,112 +1,156 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useMemo, useState } from "react";
+import { ScrollView, Text, View } from "react-native";
+import DropDownPicker from "react-native-dropdown-picker";
+import apiRequest from "../../apis/client";
+import { styles } from "./style";
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+export default function MaintenanceScreen() {
+  const [currMaintenanceReqs, setCurrMaintenanceReqs] = useState<any[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<string>("All");
 
-export default function MaintenanceListScreen() {
+  // dropdown state
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState([
+    { label: "All", value: "All" },
+    { label: "Open", value: "Open" },
+    { label: "In Progress", value: "In Progress" },
+    { label: "Closed", value: "Closed" },
+  ]);
+
+  useEffect(() => {
+    const fetchMaintenanceData = async () => {
+      try {
+        const [currMaintenanceReqs] = await Promise.all([
+          apiRequest("/maintenanceRequestStatus", "GET"),
+        ]);
+        setCurrMaintenanceReqs(currMaintenanceReqs || []);
+      } catch (err) {
+        console.error("Maintenance fetch error:", err);
+      }
+    };
+
+    fetchMaintenanceData();
+  }, []);
+
+  const activeRequests = useMemo(() => {
+    return currMaintenanceReqs.filter(
+      (item) =>
+        item.status?.toLowerCase() === "open" ||
+        item.status?.toLowerCase() === "in progress"
+    );
+  }, [currMaintenanceReqs]);
+
+  const filteredRequests = useMemo(() => {
+    if (selectedStatus === "All") return currMaintenanceReqs;
+    return currMaintenanceReqs.filter(
+      (item) =>
+        item.status?.toLowerCase() === selectedStatus.toLowerCase()
+    );
+  }, [currMaintenanceReqs, selectedStatus]);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Maintenance
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <LinearGradient colors={["#6a11cb", "#2575fc"]} style={styles.gradient}>
+      <View style={styles.scrollContainer}>
+        <Text style={styles.title}>Maintenance</Text>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Active Requests</Text>
+            {activeRequests.length > 0 ? (
+              activeRequests.map((item, idx) => (
+                <View key={idx} style={styles.row}>
+                  <View style={styles.rowLeft}>
+                    <Text style={styles.name}>
+                      {item.firstName} {item.lastName}
+                    </Text>
+                    <Text style={styles.address}>
+                      {item.address}
+                      {item.unit ? ` #${item.unit}` : ""}
+                    </Text>
+                  </View>
+                  <View style={styles.rowRight}>
+                    <Text style={styles.details}>
+                      {new Date(item.dateCreated).toLocaleDateString()}
+                    </Text>
+                    <Text style={styles.details}>{item.description}</Text>
+                    <Text
+                      style={[
+                        styles.status,
+                        item.status === "Open" && { backgroundColor: "rgba(76, 175, 80, 0.4)" },
+                        item.status === "In Progress" && { backgroundColor: "rgba(255, 193, 7, 0.4)" },
+                        item.status === "Closed" && { backgroundColor: "rgba(244, 67, 54, 0.4)" },
+                      ]}
+                    >
+                      {item.status}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyText}>No active requests</Text>
+            )}
+          </View>
+
+          <View style={styles.card}>
+            <View style={styles.filterHeader}>
+              <Text style={styles.cardTitle}>All Requests</Text>
+            </View>
+            <View>
+              <DropDownPicker
+                open={open}
+                value={selectedStatus}
+                items={items}
+                setOpen={setOpen}
+                setValue={setSelectedStatus}
+                setItems={setItems}
+                style={styles.dropdownCompact}
+                textStyle={styles.dropdownTextCompact}
+                dropDownContainerStyle={styles.dropdownContainerCompact}
+                placeholder="Filter"
+                listMode="SCROLLVIEW"
+                zIndex={1000}
+              />
+            </View>
+
+            {filteredRequests.length > 0 ? (
+              filteredRequests.map((item, idx) => (
+                <View key={idx} style={styles.row}>
+                  <View style={styles.rowLeft}>
+                    <Text style={styles.name}>
+                      {item.firstName} {item.lastName}
+                    </Text>
+                    <Text style={styles.address}>
+                      {item.address}
+                      {item.unit ? ` #${item.unit}` : ""}
+                    </Text>
+                  </View>
+                  <View style={styles.rowRight}>
+                    <Text style={styles.details}>
+                      {new Date(item.dateCreated).toLocaleDateString()}
+                    </Text>
+                    <Text style={styles.details}>{item.description}</Text>
+                    <Text
+                      style={[
+                        styles.status,
+                        item.status === "Open" && { backgroundColor: "rgba(76, 175, 80, 0.4)" },
+                        item.status === "In Progress" && { backgroundColor: "rgba(255, 193, 7, 0.4)" },
+                        item.status === "Closed" && { backgroundColor: "rgba(244, 67, 54, 0.4)" },
+                      ]}
+                    >
+                      {item.status}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyText}>No requests found</Text>
+            )}
+          </View>
+        </ScrollView>
+      </View>
+    </LinearGradient>
   );
 }
-
-const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-});
