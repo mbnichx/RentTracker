@@ -78,6 +78,33 @@ func GetUserHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+func GetCurrentUserHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := strings.TrimPrefix(r.URL.Path, "/users/")
+		if idStr == "" {
+			users, err := GetAllUsers(db)
+			if err != nil {
+				respondError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			respondJSON(w, http.StatusOK, users)
+			return
+		}
+
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			respondError(w, http.StatusBadRequest, "Invalid userId")
+			return
+		}
+		u, err := GetUserByID(db, id)
+		if err != nil {
+			respondError(w, http.StatusNotFound, "User not found")
+			return
+		}
+		respondJSON(w, http.StatusOK, u)
+	}
+}
+
 func UpdateUserHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {

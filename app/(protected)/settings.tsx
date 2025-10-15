@@ -1,122 +1,96 @@
-import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View, TextInput, TouchableOpacity, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import apiRequest from "../../apis/client";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+import * as util from "../../apis/client";
+import * as p from "../../apis/properties";
+import * as u from "../../apis/users";
 import { styles } from "./style";
 
-export type RootStackParamList = {
-  Dashboard: undefined;
-  Settings: undefined;
-  TenantManagement: { propertyId: string };
+type RootStackParamList = {
+  TenantManagement: { propertyId: number };
 };
 
-type SettingsNavProp = NativeStackNavigationProp<RootStackParamList, "Settings">;
-
 export default function SettingsScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [properties, setProperties] = useState<any[]>([]);
-  const navigation = useNavigation();
-  const navigation2 = useNavigation<SettingsNavProp>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+
+  const [userEmail, setEmail] = useState("");
+  const [userPassword, setPassword] = useState("");
+  const [properties, setProperties] = useState<p.Property[]>([]);
+  const [newPropertyName, setNewPropertyName] = useState("");
+
+  // Load user + properties
   useEffect(() => {
-    fetchUser();
-    fetchProperties();
+    (async () => {
+      const user = await util.safeCall(() => u.getUsers());
+      if (user?.email) setEmail(user.email);
+
+      const props = await util.safeCall(() => p.getProperties());
+      if (props) setProperties(props);
+    })();
   }, []);
 
-  const fetchUser = async () => {
-    try {
-      const user = await apiRequest("/users", "GET");
-      if (user) {
-        setEmail(user.email);
-      }
-    } catch (err) {
-      console.error("User fetch error:", err);
-    }
-  };
 
-  const fetchProperties = async () => {
-    try {
-      const res = await apiRequest("/properties", "GET");
-      setProperties(res || []);
-    } catch (err) {
-      console.error("Property fetch error:", err);
-    }
-  };
+  const handleUpdateUser = () =>
+    util.safeCall(() => u.updateUser({ userEmail: userEmail, userPassword: userPassword }), "Account updated");
 
-  const updateUser = async () => {
-    try {
-      await apiRequest("/users", "PUT", { email, password });
-      Alert.alert("Success", "Account updated!");
-    } catch (err) {
-      Alert.alert("Error", "Failed to update account");
-    }
-  };
+  const handleAddProperty = () =>
+    newPropertyName.trim()
+      ? util.safeCall(() => p.createProperty({ propertyName: newPropertyName }), "Property added")
+        .then((created) => created && setProperties((prev) => [...prev, created]))
+        .then(() => setNewPropertyName(""))
+      : Alert.alert("Validation", "Property name is required");
 
-  const addProperty = async () => {
-    Alert.prompt("Add Property", "Enter property name", async (name) => {
-      if (!name) return;
-      try {
-        await apiRequest("/properties", "POST", { name });
-        fetchProperties();
-      } catch (err) {
-        Alert.alert("Error", "Failed to add property");
-      }
-    });
-  };
+  const handleEditProperty = (propertyId: number, propertyName: string) =>
+    util.safeCall(() => p.updateProperty({ propertyId, propertyName }), "Property updated")
+      .then(() =>
+        setProperties((prev) =>
+          prev.map((prop) =>
+            prop.propertyId === propertyId ? { ...prop, propertyName } : prop
+          )
+        )
+      );
 
-  const editProperty = async (id: string, currentName: string) => {
-    Alert.prompt("Edit Property", "Update property name", async (name) => {
-      if (!name) return;
-      try {
-        await apiRequest(`/properties/${id}`, "PUT", { name });
-        fetchProperties();
-      } catch (err) {
-        Alert.alert("Error", "Failed to edit property");
-      }
-    }, undefined, currentName);
-  };
-
-  const deleteProperty = async (id: string) => {
-    Alert.alert("Delete Property", "Are you sure?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete", style: "destructive", onPress: async () => {
-          try {
-            await apiRequest(`/properties/${id}`, "DELETE");
-            fetchProperties();
-          } catch (err) {
-            Alert.alert("Error", "Failed to delete property");
-          }
-        }
-      },
-    ]);
-  };
+  const handleDeleteProperty = (propertyId: number) =>
+    util.safeCall(() => p.deleteProperty(propertyId), "Property deleted")
+      .then(() =>
+        setProperties((prev) => prev.filter((pr) => pr.propertyId !== propertyId))
+      );
 
   return (
     <LinearGradient colors={["#6a11cb", "#2575fc"]} style={styles.gradient}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.title}>Settings</Text>
 
-        {/* Edit Account */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Account</Text>
           <TextInput
             style={styles.input}
             placeholder="Email"
-            value={email}
+            value={userEmail}
             onChangeText={setEmail}
+            autoCapitalize="none"
           />
           <TextInput
             style={styles.input}
             placeholder="New Password"
             secureTextEntry
-            value={password}
+            value={userPassword}
             onChangeText={setPassword}
           />
-          <TouchableOpacity style={styles.button} onPress={updateUser}>
+          <TouchableOpacity style={styles.button} onPress={handleUpdateUser}>
             <Text style={styles.buttonText}>Update Account</Text>
           </TouchableOpacity>
         </View>
@@ -125,32 +99,54 @@ export default function SettingsScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Properties</Text>
           {properties.length > 0 ? (
-            properties.map((prop, idx) => (
-              <View key={idx} style={styles.row}>
+            properties.map((prop) => (
+              <View key={prop.propertyId} style={styles.row}>
                 <View style={styles.rowLeft}>
-                  <Text style={styles.name}>{prop.name}</Text>
+                  <Text style={styles.name}>{prop.propertyName}</Text>
                 </View>
                 <View style={styles.rowRight}>
-                  <TouchableOpacity onPress={() => navigation2.navigate("TenantManagement", { propertyId: prop.id })}>
-                    <Text style={styles.details}>View</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => editProperty(prop.id, prop.name)}>
-                    <Text style={styles.details}>Edit</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => deleteProperty(prop.id)}>
-                    <Text style={[styles.details, { color: "red" }]}>Delete</Text>
-                  </TouchableOpacity>
-                </View>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: "/settingsTenantMgmt",
+                        params: { propertyId: prop.propertyId }
+                      })
+                    }
+                  >
+                  <Text style={styles.details}>View</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() =>
+                    handleEditProperty(prop.propertyId, prop.propertyName)
+                  }
+                >
+                  <Text style={styles.details}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleDeleteProperty(prop.propertyId)}
+                >
+                  <Text style={[styles.details, { color: "red" }]}>
+                    Delete
+                  </Text>
+                </TouchableOpacity>
               </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No properties</Text>
+              </View>
+        ))
+        ) : (
+        <Text style={styles.emptyText}>No properties</Text>
           )}
-          <TouchableOpacity style={styles.button} onPress={addProperty}>
-            <Text style={styles.buttonText}>+ Add Property</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </LinearGradient>
+
+        <TextInput
+          style={styles.input}
+          placeholder="New Property Name"
+          value={newPropertyName}
+          onChangeText={setNewPropertyName}
+        />
+        <TouchableOpacity style={styles.button} onPress={handleAddProperty}>
+          <Text style={styles.buttonText}>+ Add Property</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+    </LinearGradient >
   );
 }

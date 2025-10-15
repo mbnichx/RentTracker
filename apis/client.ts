@@ -1,3 +1,5 @@
+import  {Alert} from "react-native"
+
 const BASE_URL = "http://10.0.0.67:8080"; // LAN IP
 
 async function apiRequest(
@@ -37,3 +39,16 @@ async function apiRequest(
 }
 
 export default apiRequest;
+
+
+// helper for cleaner error handling
+export const safeCall = async (fn: () => Promise<any>, successMsg?: string) => {
+  try {
+    const result = await fn();
+    if (successMsg) Alert.alert("Success", successMsg);
+    return result;
+  } catch (err) {
+    console.error(err);
+    Alert.alert("Error", "Something went wrong.");
+  }
+};

@@ -10,7 +10,6 @@ type User = {
 };
 
 export async function createUser(user:User) {
-  console.log(user)
   return apiRequest("/users", "POST", user);
 }
 
@@ -18,7 +17,11 @@ export async function getUsers() {
   return apiRequest("/users/", "GET");
 }
 
-export async function updateUser(user:User) {
+export async function getCurrentUser() {
+  return apiRequest("/users/me", "GET");
+}
+
+export async function updateUser(user:Partial<User>) {
   return apiRequest("/users/update", "PUT", user);
 }
 

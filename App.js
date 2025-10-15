@@ -5,6 +5,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { auth } from "./firebaseConfig";
 
+import TenantManagementScreen from "./app/(protected)/settingsTenantMgmt";
 import DashboardScreen from "./app/DashboardScreen";
 import LoginScreen from "./app/LoginScreen";
 import SignupScreen from "./app/SignupScreen";
@@ -23,7 +24,12 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator>
         {user ? (
-          <Stack.Screen name="Dashboard" component={DashboardScreen} />
+          <Stack.Screen name="Dashboard" component={DashboardScreen} />,
+          <Stack.Screen
+              name="TenantManagement"
+              component={TenantManagementScreen}
+              options={{ title: "Tenant Management" }}
+            />
         ) : (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />

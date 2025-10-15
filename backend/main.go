@@ -46,6 +46,7 @@ func main() {
 	// USERS
 
 	mux.Handle("/users/", GetUserHandler(db))
+	mux.Handle("/users/me", GetCurrentUserHandler(db))
 	mux.Handle("/users/update", UpdateUserHandler(db))
 	mux.Handle("/users/delete/", DeleteUserHandler(db))
 

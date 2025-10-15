@@ -120,7 +120,7 @@ func DeletePropertyHandler(db *sql.DB) http.HandlerFunc {
 // == SQL Queries ========================================================================
 func CreateProperty(db *sql.DB, p *Property) (int, error) {
 	res, err := db.Exec(`
-		INSERT INTO properties (propertyName, propertyStreetAddress, propertyCity, propertyState, propertyZip, propertyOwnerId)
+		INSERT INTO properties (propertyName, propertyStreetAddress, propertyCity, propertyState, propertyZip, ownerUserId)
 		VALUES (?, ?, ?, ?, ?, ?)`,
 		p.PropertyName, p.PropertyStreet, p.PropertyCity, p.PropertyState, p.PropertyZip, p.OwnerUserID)
 	if err != nil {
@@ -131,7 +131,7 @@ func CreateProperty(db *sql.DB, p *Property) (int, error) {
 }
 
 func UpdateProperty(db *sql.DB, p *Property) error {
-	_, err := db.Exec(`UPDATE properties SET propertyName=?, propertyStreetAddress=?, propertyCity=?, propertyState=?, propertyZip=?, propertyOwnerId=? WHERE propertyId=?`,
+	_, err := db.Exec(`UPDATE properties SET propertyName=?, propertyStreetAddress=?, propertyCity=?, propertyState=?, propertyZip=?, ownerUserId=? WHERE propertyId=?`,
 		p.PropertyName, p.PropertyStreet, p.PropertyCity, p.PropertyState, p.PropertyZip, p.OwnerUserID, p.PropertyID)
 	return err
 }
@@ -142,7 +142,7 @@ func DeleteProperty(db *sql.DB, id int) error {
 }
 
 func GetAllProperties(db *sql.DB) ([]Property, error) {
-	rows, err := db.Query(`SELECT propertyId, propertyName, propertyAddress, propertyCity, propertyState, propertyZip, propertyOwnerId FROM properties`)
+	rows, err := db.Query(`SELECT propertyId, propertyName, propertyStreetAddress, propertyCity, propertyState, propertyZip, ownerUserId FROM properties`)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func GetAllProperties(db *sql.DB) ([]Property, error) {
 
 func GetPropertyByID(db *sql.DB, id int) (*Property, error) {
 	var p Property
-	err := db.QueryRow(`SELECT propertyId, propertyName, propertyStreetAddress, propertyCity, propertyState, propertyZip, propertyOwnerId FROM properties WHERE propertyId=?`, id).
+	err := db.QueryRow(`SELECT propertyId, propertyName, propertyStreetAddress, propertyCity, propertyState, propertyZip, ownerUserId FROM properties WHERE propertyId=?`, id).
 		Scan(&p.PropertyID, &p.PropertyName, &p.PropertyStreet, &p.PropertyCity, &p.PropertyState, &p.PropertyZip, &p.OwnerUserID)
 	if err != nil {
 		return nil, err

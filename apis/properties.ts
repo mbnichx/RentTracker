@@ -1,6 +1,6 @@
 import apiRequest from "./client";
 
-type Property = {
+export type Property = {
   propertyId: number;
   ownerUserId: number;
   propertyName: string;
@@ -13,15 +13,15 @@ type Property = {
   propertyNotes: string;
 };
 
-export async function createProperty(property:Property) {
+export async function createProperty(property:Partial<Property>) {
   return apiRequest("/properties", "POST", property);
 }
 
-export async function getPropertys() {
+export async function getProperties() {
   return apiRequest("/properties/", "GET");
 }
 
-export async function updateProperty(property:Property) {
+export async function updateProperty(property:Partial<Property>) {
   return apiRequest("/properties/update", "PUT", property);
 }
 

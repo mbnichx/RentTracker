@@ -1,14 +1,14 @@
-import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View, TextInput } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useRoute } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useState } from "react";
+import { ScrollView, Text, TextInput, View } from "react-native";
 import apiRequest from "../../apis/client";
 import { styles } from "./style";
 
 export default function TenantManagementScreen() {
   const route = useRoute();
-  const { propertyId } = route.params as { propertyId: string };
+  const { propertyId } = route.params as { propertyId: number };
   const [units, setUnits] = useState<any[]>([]);
 
   useEffect(() => {
