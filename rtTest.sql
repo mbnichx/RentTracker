@@ -37,6 +37,6 @@ VALUES
 -- MAINTENANCE REQUESTS
 INSERT INTO maintenanceRequests (propertyUnitId, leaseId, maintenanceRequestInfo, maintenanceRequestPriority, maintenanceRequestCategory, maintenanceRequestStatus, maintenanceRequestCreatedUnix, maintenanceRequestCompletedUnix, maintenanceAssignedTo)
 VALUES
-(1, 1, 'Leaky faucet in kitchen', 'normal', 'plumbing', 'completed', 1690500000, 1690600000, 'Bob'),
-(2, 2, 'AC not cooling', 'urgent', 'HVAC', 'open', 1696100000, NULL, 'Alice'),
-(3, 3, 'Broken window', 'low', 'general', 'in progress', 1699100000, NULL, 'Bob');
+(1, 1, 'Leaky faucet in kitchen', 'normal', 'plumbing', 'Completed', 1690500000, 1690600000, 'Bob'),
+(2, 2, 'AC not cooling', 'urgent', 'HVAC', 'Open', 1696100000, NULL, 'Alice'),
+(3, 3, 'Broken window', 'low', 'general', 'In Progress', 1699100000, NULL, 'Bob');

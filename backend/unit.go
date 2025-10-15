@@ -65,7 +65,7 @@ func GetPropertyUnitHandler(db *sql.DB) http.HandlerFunc {
 			respondError(w, http.StatusBadRequest, "invalid id")
 			return
 		}
-		u, err := GetPropertyUnitByID(db, id)
+		u, err := GetPropertyUnitsByID(db, id)
 		if err != nil {
 			respondError(w, http.StatusNotFound, "not found")
 			return
@@ -160,12 +160,20 @@ func GetAllPropertyUnits(db *sql.DB) ([]PropertyUnit, error) {
 	return out, nil
 }
 
-func GetPropertyUnitByID(db *sql.DB, id int) (*PropertyUnit, error) {
-	var u PropertyUnit
-	err := db.QueryRow(`SELECT propertyUnitId, propertyId, propertyUnitNumber, propertyUnitBeds, propertyUnitBaths, propertyUnitSqFt, propertyUnitRentDefault, propertyUnitNotes FROM propertyUnits WHERE propertyUnitId=?`, id).
-		Scan(&u.PropertyUnitID, &u.PropertyID, &u.PropertyUnitNumber, &u.PropertyUnitBeds, &u.PropertyUnitBaths, &u.PropertyUnitSqFt, &u.PropertyUnitRentDefault, &u.PropertyUnitNotes)
+func GetPropertyUnitsByID(db *sql.DB, id int) ([]PropertyUnit, error) {
+	rows, err := db.Query(`SELECT propertyUnitId, propertyId, propertyUnitNumber, propertyUnitBeds, propertyUnitBaths, propertyUnitSqFt, propertyUnitRentDefault, propertyUnitNotes FROM propertyUnits WHERE propertyId=?`, id)
 	if err != nil {
 		return nil, err
 	}
-	return &u, nil
+	defer rows.Close()
+
+	var out []PropertyUnit
+	for rows.Next() {
+		var u PropertyUnit
+		if err := rows.Scan(&u.PropertyUnitID, &u.PropertyID, &u.PropertyUnitNumber, &u.PropertyUnitBeds, &u.PropertyUnitBaths, &u.PropertyUnitSqFt, &u.PropertyUnitRentDefault, &u.PropertyUnitNotes); err != nil {
+			return nil, err
+		}
+		out = append(out, u)
+	}
+	return out, nil
 }

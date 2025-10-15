@@ -15,8 +15,8 @@ export async function createUnit(unit:Unit) {
   return apiRequest("/units", "POST", unit);
 }
 
-export async function getUnits() {
-  return apiRequest("/units/", "GET");
+export async function getUnits(propertyId:number) {
+  return apiRequest(`/units/${propertyId}`, "GET");
 }
 
 export async function updateUnit(unit:Unit) {

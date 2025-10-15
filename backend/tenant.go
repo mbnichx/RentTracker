@@ -62,7 +62,16 @@ func GetTenantHandler(db *sql.DB) http.HandlerFunc {
 		// Expect tenantId in query param
 		tenantIDStr := r.URL.Query().Get("tenantId")
 		if tenantIDStr == "" {
-			respondError(w, http.StatusBadRequest, "Missing tenantId parameter")
+			tenants, err := GetAllTenants(db)
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					respondError(w, http.StatusNotFound, "No tenants")
+				} else {
+					respondError(w, http.StatusInternalServerError, err.Error())
+				}
+				return
+			}
+			respondJSON(w, http.StatusOK, tenants)
 			return
 		}
 		tenantID, err := strconv.Atoi(tenantIDStr)

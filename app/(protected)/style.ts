@@ -111,6 +111,7 @@ export const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: "#fff",
+    color: "#000000",
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
@@ -128,7 +129,19 @@ export const styles = StyleSheet.create({
   },
   picker: {
     backgroundColor: "#fff",
+    color: "#999",
     borderRadius: 8,
     marginBottom: 10,
   },
+  dropdown: {
+    backgroundColor: "#fff",
+    borderColor: "#ccc",
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  dropdownContainer: {
+    backgroundColor: "#fff",
+    borderColor: "#ccc",
+  },
+
 });
