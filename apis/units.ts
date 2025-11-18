@@ -1,5 +1,6 @@
 import apiRequest from "./client";
 
+// Unit represents a rentable unit within a property.
 type Unit = {
   propertyUnitId: number;
   propertyId: number;
@@ -11,18 +12,32 @@ type Unit = {
   propertyUnitNotes: string;
 };
 
-export async function createUnit(unit:Unit) {
+/**
+ * Create a unit record.
+ * @param unit - Unit payload
+ */
+export async function createUnit(unit: Unit) {
   return apiRequest("/units", "POST", unit);
 }
 
-export async function getUnits(propertyId:number) {
+/**
+ * Get units for a specific property.
+ * @param propertyId - Id of property to fetch units for
+ */
+export async function getUnits(propertyId: number) {
   return apiRequest(`/units/${propertyId}`, "GET");
 }
 
-export async function updateUnit(unit:Unit) {
+/**
+ * Update a unit record. Include `propertyUnitId` in the unit payload.
+ */
+export async function updateUnit(unit: Unit) {
   return apiRequest("/units/update", "PUT", unit);
 }
 
-export async function deleteUnit(unitId:number) {
+/**
+ * Delete a unit by id.
+ */
+export async function deleteUnit(unitId: number) {
   return apiRequest(`/units/delete/${unitId}`, "DELETE");
 }

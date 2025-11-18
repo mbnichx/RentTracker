@@ -1,5 +1,6 @@
 import apiRequest from "./client";
 
+// Tenant record structure used by the API layer.
 type Tenant = {
   tenantId: number;
   tenantFirstName: string;
@@ -8,18 +9,33 @@ type Tenant = {
   tenantPhoneNumber: string;
 };
 
-export async function createTenant(tenant:Tenant) {
+/**
+ * Create a tenant record.
+ * @param tenant - Tenant payload
+ */
+export async function createTenant(tenant: Tenant) {
   return apiRequest("/tenants", "POST", tenant);
 }
 
+/**
+ * Retrieve tenants.
+ * @returns Promise resolving with an array of tenants
+ */
 export async function getTenants() {
   return apiRequest("/tenants/", "GET");
 }
 
-export async function updateTenant(tenant:Tenant) {
+/**
+ * Update a tenant record. Include `tenantId` in the payload to identify the
+ * record to update.
+ */
+export async function updateTenant(tenant: Tenant) {
   return apiRequest("/tenants/update", "PUT", tenant);
 }
 
-export async function deleteTenant(tenantId:number) {
+/**
+ * Delete a tenant by id.
+ */
+export async function deleteTenant(tenantId: number) {
   return apiRequest(`/tenants/delete/${tenantId}`, "DELETE");
 }
