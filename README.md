@@ -1,50 +1,133 @@
-# Welcome to your Expo app 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# RentTracker — local development README
 
-## Get started
+This repository contains a React Native (Expo) frontend and a Go backend using SQLite for storage. The instructions below explain how to set up the initial database, run the Go server, and run the Expo app locally on Windows (PowerShell).
 
-1. Install dependencies
+If you already have a working development environment you can follow just the sections you need (Database → Backend → Frontend).
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## Requirements
 
-   ```bash
-   npx expo start
-   ```
+- Node.js (16+ recommended) and npm (or yarn)
+- Expo CLI (optional) — you can use `npx expo` without a global install
+- Go toolchain (1.18+ recommended)
+- sqlite3 CLI (for creating/loading the local DB)
 
-In the output, you'll find options to open the app in a
+On Windows (PowerShell) you can install:
+- Node.js: https://nodejs.org/
+- Go: https://go.dev/dl/
+- sqlite3: install via Chocolatey (choco) or download prebuilt binaries
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Example (Chocolatey):
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```powershell
+choco install nodejs-lts golang sqlite
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+## 1) Setup the initial SQLite database
 
-To learn more about developing your project with Expo, look at the following resources:
+This project ships with `rt.sql` (top-level). It contains the schema and view definitions used by the backend.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+From the project root (PowerShell):
 
-## Join the community
+```powershell
+# Optional: back up existing DB
+if (Test-Path .\rt.db) { copy-item .\rt.db .\rt.db.bak }
 
-Join our community of developers creating universal apps.
+# Create/overwrite the DB by executing the schema file
+sqlite3 .\rt.db ".read rt.sql"
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Quick verification: list overdue and upcoming views
+sqlite3 .\rt.db "SELECT leaseId, firstName, lastName, rentAmount, lastPaymentUnix, paymentStatus FROM overduePayments;"
+sqlite3 .\rt.db "SELECT leaseId, firstName, lastName, rentAmount, lastPaymentUnix, paymentStatus FROM upcomingPayments;"
+```
+
+Notes
+- Running `.read rt.sql` will DROP and CREATE tables and views as defined in the file. Back up `rt.db` first if it contains important data.
+- If you modify `rt.sql`, re-run the `.read` command to apply changes to `rt.db`.
+
+---
+
+## 2) Run the Go backend server
+
+The backend lives in the `backend/` directory and exposes API endpoints the app expects (payments, leases, maintenance, dashboard views, etc.).
+
+From PowerShell:
+
+```powershell
+cd .\backend
+
+# download modules
+go mod download
+
+# build
+go build
+
+# run (Windows)
+.\main.exe
+
+# or run without building
+go run .
+```
+
+Important
+- The frontend's API client is configured in `apis/client.ts` with a BASE_URL (currently a LAN IP). If you run the backend locally on the same machine, ensure `BASE_URL` points to the backend address and port (for example `http://10.0.0.67:8080` or `http://localhost:8080`). Update `apis/client.ts` if needed.
+
+---
+
+## 3) Run the Expo frontend (React Native)
+
+From the project root:
+
+```powershell
+npm install
+
+# Start Expo dev server (tunnel recommended for device testing)
+npx expo start --tunnel
+
+# Or if you prefer the default
+npx expo start
+```
+
+Then open the project in Expo Go or a simulator. If using an emulator/simulator, follow Expo's instructions for Android Studio or Xcode.
+
+Notes
+- The frontend periodically fetches data from the backend endpoints. Make sure the backend is running and reachable from your device (emulator or physical device). If using a phone, prefer `--tunnel` or ensure your machine's LAN IP is accessible.
+
+---
+
+## Useful development commands
+
+- Recreate DB: `sqlite3 .\rt.db ".read rt.sql"`
+- Build backend: `cd backend; go build`
+- Run backend without building: `cd backend; go run .`
+- Start Expo: `npx expo start`
+- Install JS deps: `npm install`
+
+---
+
+## Troubleshooting
+
+- Backend cannot connect to DB: confirm `rt.db` exists in the repo root and `main.go` opens it. The backend expects a local file named `rt.db`.
+- API calls failing from app: check `apis/client.ts` BASE_URL and adjust to your backend address.
+- Views not reflecting changes: if you edit `rt.sql`, re-run the `.read rt.sql` command and restart the backend (views are resolved by the DB engine at query time but the backend may cache things).
+
+---
+
+## Dependencies (high level)
+
+- Node / npm: use package.json to install JS dependencies (`npm install`).
+- Expo: no global install required; use `npx expo`.
+- Go: standard modules are declared in `backend/go.mod`; run `go mod download` to fetch them.
+- sqlite3 CLI: used for manually creating the DB from `rt.sql`.
+
+If you want I can add a small script (PowerShell or npm script) to reset/create the DB and start backend + frontend together.
+
+---
+
+If anything above doesn't work in your environment, tell me what OS and exact error messages you see and I'll help you resolve them.
+
+Happy hacking — use the `issues` workflow or ask here if you want automation scripts added.
