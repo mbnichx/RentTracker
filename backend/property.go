@@ -8,6 +8,12 @@
 
 package main
 
+// Package-level summary:
+// This file implements property CRUD HTTP handlers and database helpers for
+// creating, reading, updating, and deleting property records. Handlers include
+// CreatePropertyHandler, GetPropertyHandler, UpdatePropertyHandler, DeletePropertyHandler.
+// DB helpers: CreateProperty, GetAllProperties, GetPropertyByID, UpdateProperty, DeleteProperty.
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -32,6 +38,8 @@ type Property struct {
 
 // == Handlers ========================================================================
 // POST
+// CreatePropertyHandler returns an HTTP handler for creating a new property.
+// Accepts a JSON body, inserts into DB, and responds with the created property.
 func CreatePropertyHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -54,6 +62,8 @@ func CreatePropertyHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // GET
+// GetPropertyHandler returns an HTTP handler for retrieving properties.
+// If no ID is provided, returns all properties; otherwise, returns the property with the given ID.
 func GetPropertyHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := strings.TrimPrefix(r.URL.Path, "/properties/")
@@ -81,6 +91,8 @@ func GetPropertyHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // PUT
+// UpdatePropertyHandler returns an HTTP handler for updating a property.
+// Accepts a JSON body, validates propertyId, updates the DB, and responds with status.
 func UpdatePropertyHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
@@ -105,6 +117,8 @@ func UpdatePropertyHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // DELETE
+// DeletePropertyHandler returns an HTTP handler for deleting a property by ID.
+// Accepts a DELETE request, removes the property from DB, and responds with status.
 func DeletePropertyHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
@@ -126,6 +140,8 @@ func DeletePropertyHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // == SQL Queries ========================================================================
+// CreateProperty inserts a new property into the database.
+// Returns the new property ID and error if insertion fails.
 func CreateProperty(db *sql.DB, p *Property) (int, error) {
 	res, err := db.Exec(`
 		INSERT INTO properties (propertyName, propertyStreetAddress, propertyCity, propertyState, propertyZip, ownerUserId)
@@ -138,17 +154,23 @@ func CreateProperty(db *sql.DB, p *Property) (int, error) {
 	return int(id), nil
 }
 
+// UpdateProperty updates an existing property in the database.
+// Returns error if update fails.
 func UpdateProperty(db *sql.DB, p *Property) error {
 	_, err := db.Exec(`UPDATE properties SET propertyName=?, propertyStreetAddress=?, propertyCity=?, propertyState=?, propertyZip=?, ownerUserId=? WHERE propertyId=?`,
 		p.PropertyName, p.PropertyStreet, p.PropertyCity, p.PropertyState, p.PropertyZip, p.OwnerUserID, p.PropertyID)
 	return err
 }
 
+// DeleteProperty removes a property from the database by propertyId.
+// Returns error if deletion fails.
 func DeleteProperty(db *sql.DB, id int) error {
 	_, err := db.Exec(`DELETE FROM properties WHERE propertyId=?`, id)
 	return err
 }
 
+// GetAllProperties retrieves all properties from the database.
+// Returns a slice of Property and error if query fails.
 func GetAllProperties(db *sql.DB) ([]Property, error) {
 	rows, err := db.Query(`SELECT propertyId, propertyName, propertyStreetAddress, propertyCity, propertyState, propertyZip, ownerUserId FROM properties`)
 	if err != nil {
@@ -167,6 +189,8 @@ func GetAllProperties(db *sql.DB) ([]Property, error) {
 	return props, nil
 }
 
+// GetPropertyByID retrieves a property by propertyId from the database.
+// Returns pointer to Property and error if not found or query fails.
 func GetPropertyByID(db *sql.DB, id int) (*Property, error) {
 	var p Property
 	err := db.QueryRow(`SELECT propertyId, propertyName, propertyStreetAddress, propertyCity, propertyState, propertyZip, ownerUserId FROM properties WHERE propertyId=?`, id).

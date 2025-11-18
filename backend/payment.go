@@ -8,6 +8,12 @@
 
 package main
 
+// Package-level summary:
+// This file implements payment CRUD HTTP handlers and database helpers for
+// creating, reading, updating, and deleting payment records. Handlers include
+// CreatePaymentHandler, GetPaymentHandler, UpdatePaymentHandler, DeletePaymentHandler.
+// DB helpers: CreatePayment, GetAllPayments, GetPaymentByID, UpdatePayment, DeletePayment.
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -29,6 +35,8 @@ type Payment struct {
 
 // == Handlers =============================================================================
 // POST
+// CreatePaymentHandler returns an HTTP handler for creating a new payment.
+// Accepts a JSON body, validates required fields, inserts into DB, and responds with the created payment.
 func CreatePaymentHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -55,6 +63,8 @@ func CreatePaymentHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // GET
+// GetPaymentHandler returns an HTTP handler for retrieving payments.
+// If no ID is provided, returns all payments; otherwise, returns the payment with the given ID.
 func GetPaymentHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := strings.TrimPrefix(r.URL.Path, "/payments/")
@@ -82,6 +92,8 @@ func GetPaymentHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // PUT
+// UpdatePaymentHandler returns an HTTP handler for updating a payment.
+// Accepts a JSON body, validates paymentId, updates the DB, and responds with status.
 func UpdatePaymentHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
@@ -106,6 +118,8 @@ func UpdatePaymentHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // DELETE
+// DeletePaymentHandler returns an HTTP handler for deleting a payment by ID.
+// Accepts a DELETE request, removes the payment from DB, and responds with status.
 func DeletePaymentHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
@@ -127,6 +141,8 @@ func DeletePaymentHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // == SQL Queries ======================================================================
+// CreatePayment inserts a new payment into the database.
+// Returns the new payment ID and error if insertion fails.
 func CreatePayment(db *sql.DB, p *Payment) (int, error) {
 	res, err := db.Exec(`INSERT INTO payments (leaseId, paymentAmount, paymentDateUnix, paymentMethod, paymentNotes, paymentConfirmation)
 	VALUES (?, ?, ?, ?, ?, ?)`, p.LeaseID, p.PaymentAmount, p.PaymentDateUnix, p.PaymentMethod, p.PaymentNotes, p.PaymentConfirmation)
@@ -137,17 +153,23 @@ func CreatePayment(db *sql.DB, p *Payment) (int, error) {
 	return int(id), nil
 }
 
+// UpdatePayment updates an existing payment in the database.
+// Returns error if update fails.
 func UpdatePayment(db *sql.DB, p *Payment) error {
 	_, err := db.Exec(`UPDATE payments SET leaseId=?, paymentAmount=?, paymentDateUnix=?, paymentMethod=?, paymentNotes=?, paymentConfirmation=? WHERE paymentId=?`,
 		p.LeaseID, p.PaymentAmount, p.PaymentDateUnix, p.PaymentMethod, p.PaymentNotes, p.PaymentConfirmation, p.PaymentID)
 	return err
 }
 
+// DeletePayment removes a payment from the database by paymentId.
+// Returns error if deletion fails.
 func DeletePayment(db *sql.DB, id int) error {
 	_, err := db.Exec(`DELETE FROM payments WHERE paymentId=?`, id)
 	return err
 }
 
+// GetAllPayments retrieves all payments from the database.
+// Returns a slice of Payment and error if query fails.
 func GetAllPayments(db *sql.DB) ([]Payment, error) {
 	rows, err := db.Query(`SELECT paymentId, leaseId, paymentAmount, paymentDateUnix, paymentMethod, paymentNotes, paymentConfirmation FROM payments`)
 	if err != nil {
@@ -166,6 +188,8 @@ func GetAllPayments(db *sql.DB) ([]Payment, error) {
 	return out, nil
 }
 
+// GetPaymentByID retrieves a payment by paymentId from the database.
+// Returns pointer to Payment and error if not found or query fails.
 func GetPaymentByID(db *sql.DB, id int) (*Payment, error) {
 	var p Payment
 	err := db.QueryRow(`SELECT paymentId, leaseId, paymentAmount, paymentDateUnix, paymentMethod, paymentNotes, paymentConfirmation FROM payments WHERE paymentId=?`, id).

@@ -8,6 +8,10 @@
 
 package main
 
+// Package-level summary:
+// This file provides the dashboard lease overview handler, GetLeasesHandler,
+// which queries the leasesView SQL view and returns lease summary data for the UI.
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -23,6 +27,8 @@ type LeaseSummary struct {
 	LeaseStartDate string `json:"leaseStartDate"` // formatted date
 }
 
+// GetLeasesHandler returns an HTTP handler for retrieving lease overview data from the leasesView SQL view.
+// Responds with a list of lease summaries for the dashboard UI.
 func GetLeasesHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query(`SELECT firstName, lastName, address, unit, leaseStartDate, rentAmount, leaseStatus FROM leasesView`)

@@ -8,6 +8,10 @@
 
 package main
 
+// Package-level summary:
+// This file provides the dashboard overdue payments handler, GetOverduePaymentsHandler,
+// which queries the overduePayments SQL view and returns overdue payment data for the UI.
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -26,6 +30,8 @@ type OverduePayment struct {
 	PaymentStatus   string  `json:"paymentStatus"`   // "Overdue", "Current", or "No payment recorded"
 }
 
+// GetOverduePaymentsHandler returns an HTTP handler for retrieving overdue payment data from the overduePayments SQL view.
+// Responds with a list of overdue payments for the dashboard UI.
 func GetOverduePaymentsHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query(`

@@ -8,6 +8,12 @@
 
 package main
 
+// Package-level summary:
+// This file implements maintenance request CRUD HTTP handlers and database helpers.
+// Handlers: CreateMaintenanceHandler, GetMaintenanceHandler, UpdateMaintenanceHandler,
+// DeleteMaintenanceHandler. DB helpers: CreateMaintenanceRequest, GetAllMaintenanceRequests,
+// GetMaintenanceRequestByID, UpdateMaintenanceRequest, DeleteMaintenanceRequest.
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -31,6 +37,8 @@ type MaintenanceRequest struct {
 }
 
 // == Handlers ======================================================================================
+// CreateMaintenanceHandler returns an HTTP handler for creating a new maintenance request.
+// Accepts a JSON body, validates required fields, inserts into DB, and responds with the created request.
 func CreateMaintenanceHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -56,6 +64,8 @@ func CreateMaintenanceHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// GetMaintenanceHandler returns an HTTP handler for retrieving maintenance requests.
+// If no ID is provided, returns all requests; otherwise, returns the request with the given ID.
 func GetMaintenanceHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := strings.TrimPrefix(r.URL.Path, "/maintenance/")
@@ -82,6 +92,8 @@ func GetMaintenanceHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// UpdateMaintenanceHandler returns an HTTP handler for updating a maintenance request.
+// Accepts a JSON body, validates maintenanceRequestId, updates the DB, and responds with status.
 func UpdateMaintenanceHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
@@ -105,6 +117,8 @@ func UpdateMaintenanceHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// DeleteMaintenanceHandler returns an HTTP handler for deleting a maintenance request by ID.
+// Accepts a DELETE request, removes the request from DB, and responds with status.
 func DeleteMaintenanceHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
@@ -126,6 +140,8 @@ func DeleteMaintenanceHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // == SQL Queries =====================================================================
+// CreateMaintenanceRequest inserts a new maintenance request into the database.
+// Returns the new request ID and error if insertion fails.
 func CreateMaintenanceRequest(db *sql.DB, m *MaintenanceRequest) (int, error) {
 	res, err := db.Exec(`INSERT INTO maintenanceRequests (propertyUnitId, leaseId, maintenanceRequestInfo, maintenanceRequestPriority, maintenanceRequestCategory, maintenanceRequestStatus, maintenanceRequestCreatedUnix, maintenanceRequestCompletedUnix, maintenanceAssignedTo)
 	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, m.PropertyUnitID, m.LeaseID, m.MaintenanceRequestInfo, m.MaintenanceRequestPriority, m.MaintenanceRequestCategory, m.MaintenanceRequestStatus, m.MaintenanceRequestCreatedUnix, m.MaintenanceRequestCompletedUnix, m.MaintenanceRequestAssignedTo)
@@ -135,16 +151,24 @@ func CreateMaintenanceRequest(db *sql.DB, m *MaintenanceRequest) (int, error) {
 	id, _ := res.LastInsertId()
 	return int(id), nil
 }
+
+// UpdateMaintenanceRequest updates an existing maintenance request in the database.
+// Returns error if update fails.
 func UpdateMaintenanceRequest(db *sql.DB, m *MaintenanceRequest) error {
 	_, err := db.Exec(`UPDATE maintenanceRequests SET propertyUnitId=?, leaseId=?, maintenanceRequestInfo=?, maintenanceRequestPriority=?, maintenanceRequestCategory=?, maintenanceRequestStatus=?, maintenanceRequestCreatedUnix=?, maintenanceRequestCompletedUnix=?, maintenanceAssignedTo=? WHERE maintenanceRequestId=?`,
 		m.PropertyUnitID, m.LeaseID, m.MaintenanceRequestInfo, m.MaintenanceRequestPriority, m.MaintenanceRequestCategory, m.MaintenanceRequestStatus, m.MaintenanceRequestCreatedUnix, m.MaintenanceRequestCompletedUnix, m.MaintenanceRequestAssignedTo, m.MaintenanceRequestID)
 	return err
 }
 
+// DeleteMaintenanceRequest removes a maintenance request from the database by ID.
+// Returns error if deletion fails.
 func DeleteMaintenanceRequest(db *sql.DB, id int) error {
 	_, err := db.Exec(`DELETE FROM maintenanceRequests WHERE maintenanceRequestId=?`, id)
 	return err
 }
+
+// GetAllMaintenanceRequests retrieves all maintenance requests from the database.
+// Returns a slice of MaintenanceRequest and error if query fails.
 func GetAllMaintenanceRequests(db *sql.DB) ([]MaintenanceRequest, error) {
 	rows, err := db.Query(`SELECT maintenanceRequestId, propertyUnitId, leaseId, maintenanceRequestInfo, maintenanceRequestPriority, maintenanceRequestCategory, maintenanceRequestStatus, maintenanceRequestCreatedUnix, maintenanceRequestCompletedUnix, maintenanceAssignedTo FROM maintenanceRequests`)
 	if err != nil {
@@ -163,6 +187,8 @@ func GetAllMaintenanceRequests(db *sql.DB) ([]MaintenanceRequest, error) {
 	return out, nil
 }
 
+// GetMaintenanceRequestByID retrieves a maintenance request by ID from the database.
+// Returns pointer to MaintenanceRequest and error if not found or query fails.
 func GetMaintenanceRequestByID(db *sql.DB, id int) (*MaintenanceRequest, error) {
 	var m MaintenanceRequest
 	err := db.QueryRow(`SELECT maintenanceRequestId, propertyUnitId, leaseId, maintenanceRequestInfo, maintenanceRequestPriority, maintenanceRequestCategory, maintenanceRequestStatus, maintenanceRequestCreatedUnix, maintenanceRequestCompletedUnix, maintenanceAssignedTo FROM maintenanceRequests WHERE maintenanceRequestId=?`, id).

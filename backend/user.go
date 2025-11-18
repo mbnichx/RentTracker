@@ -8,14 +8,21 @@
 
 package main
 
+// Package-level summary:
+// This file implements user registration, retrieval, update, and deletion HTTP handlers
+// and database helpers. Handlers: CreateUserHandler, GetUserHandler, GetCurrentUserHandler,
+// UpdateUserHandler, DeleteUserHandler. DB helpers: CreateUser, GetAllUsers, GetUserByID,
+// UpdateUser, DeleteUser. Passwords are hashed using bcrypt.
+
 import (
 	"database/sql"
 	"encoding/json"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // USERS
@@ -31,6 +38,9 @@ type User struct {
 
 // == Handlers ========================================================================
 
+// CreateUserHandler returns an HTTP handler for creating a new user.
+// Accepts a JSON body with user details, hashes the password, and inserts the user into the database.
+// Responds with the created user or error.
 func CreateUserHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var u User
@@ -59,6 +69,8 @@ func CreateUserHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// GetUserHandler returns an HTTP handler for retrieving user(s).
+// If no userId is provided, returns all users. Otherwise, returns the user with the given ID.
 func GetUserHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := strings.TrimPrefix(r.URL.Path, "/users/")
@@ -86,6 +98,8 @@ func GetUserHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// GetCurrentUserHandler returns an HTTP handler for retrieving the current user.
+// If no userId is provided, returns all users. Otherwise, returns the user with the given ID.
 func GetCurrentUserHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := strings.TrimPrefix(r.URL.Path, "/users/")
@@ -113,6 +127,8 @@ func GetCurrentUserHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// UpdateUserHandler returns an HTTP handler for updating user details.
+// Accepts a JSON body with updated user info and updates the user in the database.
 func UpdateUserHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
@@ -138,6 +154,8 @@ func UpdateUserHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// DeleteUserHandler returns an HTTP handler for deleting a user by ID.
+// Accepts a DELETE request and removes the user from the database.
 func DeleteUserHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
@@ -160,6 +178,9 @@ func DeleteUserHandler(db *sql.DB) http.HandlerFunc {
 
 // == SQL helpers ========================================================================
 
+// CreateUser inserts a new user into the database.
+// Hashes the password and sets the UserID field on success.
+// Returns an error if insertion fails.
 func CreateUser(db *sql.DB, u *User) error {
 	query := `INSERT INTO users (userFirstName, userLastName, userEmail, userPhoneNumber, userPasswordHash, userRole)
               VALUES (?, ?, ?, ?, ?, ?)`
@@ -172,6 +193,8 @@ func CreateUser(db *sql.DB, u *User) error {
 	return nil
 }
 
+// UpdateUser updates an existing user's details in the database.
+// Returns an error if the update fails.
 func UpdateUser(db *sql.DB, u *User) error {
 	_, err := db.Exec(`UPDATE users 
 		SET userFirstName=?, userLastName=?, userEmail=?, userPhoneNumber=?, userRole=? 
@@ -180,12 +203,16 @@ func UpdateUser(db *sql.DB, u *User) error {
 	return err
 }
 
+// DeleteUser removes a user from the database by userId.
+// Returns an error if deletion fails.
 func DeleteUser(db *sql.DB, id int) error {
 	_, err := db.Exec(`DELETE FROM users WHERE userId=?`, id)
 	return err
 }
 
 // READ
+// GetAllUsers retrieves all users from the database.
+// Returns a slice of User and an error if the query fails.
 func GetAllUsers(db *sql.DB) ([]User, error) {
 	rows, err := db.Query(`SELECT userId, userFirstName, userLastName, userEmail, userPhoneNumber, userRole FROM users`)
 	if err != nil {
@@ -204,6 +231,8 @@ func GetAllUsers(db *sql.DB) ([]User, error) {
 	return users, nil
 }
 
+// GetUserByID retrieves a user by userId from the database.
+// Returns a pointer to User and an error if not found or query fails.
 func GetUserByID(db *sql.DB, id int) (*User, error) {
 	var u User
 	err := db.QueryRow(`SELECT userId, userFirstName, userLastName, userEmail, userPhoneNumber, userRole FROM users WHERE userId=?`, id).

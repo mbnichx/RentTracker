@@ -8,6 +8,12 @@
 
 package main
 
+// Package-level summary:
+// This file provides authentication logic for login and JWT token generation.
+// Includes the Credentials struct, generateJWT helper, and LoginHandler for
+// validating user credentials and issuing tokens. Uses bcrypt for password
+// verification and JWT for session management.
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -27,6 +33,8 @@ type Credentials struct {
 }
 
 // generateJWT returns a signed JWT token
+// generateJWT creates and signs a JWT token for the given user ID.
+// Returns the token string and error if signing fails.
 func generateJWT(userID int) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
@@ -37,6 +45,8 @@ func generateJWT(userID int) (string, error) {
 }
 
 // POST /login
+// LoginHandler returns an HTTP handler for user login.
+// Accepts a JSON body with credentials, verifies password, and responds with a JWT token.
 func LoginHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var creds Credentials

@@ -8,13 +8,24 @@
 
 package main
 
+// Package-level summary:
+// This file is the main entry point for the RentTracker backend server. It
+// opens the SQLite database, sets up HTTP routes for all API endpoints, and
+// starts the server on port 8080. Route registration covers users, login,
+// dashboard, rent, property, unit, tenant, lease, payment, maintenance, and activity log endpoints.
+
 import (
 	"database/sql"
 	"log"
-	_ "modernc.org/sqlite"
 	"net/http"
+
+	_ "modernc.org/sqlite"
 )
 
+// main initializes the SQLite database, sets up HTTP routes for all API endpoints,
+// and starts the RentTracker backend server on port 8080.
+// It registers handlers for users, login, dashboard, rent, property, unit, tenant,
+// lease, payment, maintenance, and activity log endpoints.
 func main() {
 	// Open SQLite database file
 	db, err := sql.Open("sqlite", "../rt.db")

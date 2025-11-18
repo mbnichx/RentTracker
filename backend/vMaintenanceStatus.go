@@ -8,6 +8,10 @@
 
 package main
 
+// Package-level summary:
+// This file provides the dashboard maintenance status handler, GetMaintenanceRequestsHandler,
+// which queries the maintenanceRequestsView SQL view and returns maintenance request status data for the UI.
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -25,6 +29,8 @@ type MaintenanceRequestStatus struct {
 	DateCreated       string `json:"dateCreated"` // formatted date
 }
 
+// GetMaintenanceRequestsHandler returns an HTTP handler for retrieving maintenance request status data from the maintenanceRequestsView SQL view.
+// Responds with a list of maintenance request statuses for the dashboard UI.
 func GetMaintenanceRequestsHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query(`SELECT firstName, lastName, address, unit, description, maintenanceStatus, dateCreated, priority, category FROM maintenanceRequestsView`)

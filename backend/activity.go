@@ -8,6 +8,14 @@
 
 package main
 
+// Package-level summary:
+// This file implements the activity log HTTP handlers and database helpers
+// used to create, read, update, and delete activity log records. Handlers
+// exposed: CreateActivityLogHandler, GetActivityLogHandler,
+// UpdateActivityLogHandler, DeleteActivityLogHandler. DB helpers include
+// CreateActivityLog, GetAllActivityLogs, GetActivityLogByID, UpdateActivityLog,
+// and DeleteActivityLog. The handlers validate input and use JSON request/response.
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -28,6 +36,8 @@ type ActivityLog struct {
 
 // == Handlers ========================================================================
 // POST
+// CreateActivityLogHandler returns an HTTP handler for creating a new activity log entry.
+// Accepts a JSON body, validates required fields, inserts into DB, and responds with the created log.
 func CreateActivityLogHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -54,6 +64,8 @@ func CreateActivityLogHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // GET
+// GetActivityLogHandler returns an HTTP handler for retrieving activity logs.
+// If no ID is provided, returns all logs; otherwise, returns the log with the given ID.
 func GetActivityLogHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := strings.TrimPrefix(r.URL.Path, "/activity/")
@@ -81,6 +93,8 @@ func GetActivityLogHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // PUT
+// UpdateActivityLogHandler returns an HTTP handler for updating an activity log entry.
+// Accepts a JSON body, validates logId, updates the DB, and responds with status.
 func UpdateActivityLogHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
@@ -105,6 +119,8 @@ func UpdateActivityLogHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // DELETE
+// DeleteActivityLogHandler returns an HTTP handler for deleting an activity log entry by ID.
+// Accepts a DELETE request, removes the log from DB, and responds with status.
 func DeleteActivityLogHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
@@ -126,6 +142,8 @@ func DeleteActivityLogHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // == SQL Queries ========================================================================
+// CreateActivityLog inserts a new activity log into the database.
+// Returns the new log ID and error if insertion fails.
 func CreateActivityLog(db *sql.DB, a *ActivityLog) (int, error) {
 	res, err := db.Exec(`INSERT INTO activityLogs (userId, entityType, entityId, action, timestampUnix) VALUES (?, ?, ?, ?, ?)`,
 		a.UserID, a.EntityType, a.EntityID, a.Action, a.TimestampUnix)
@@ -136,17 +154,23 @@ func CreateActivityLog(db *sql.DB, a *ActivityLog) (int, error) {
 	return int(id), nil
 }
 
+// UpdateActivityLog updates an existing activity log in the database.
+// Returns error if update fails.
 func UpdateActivityLog(db *sql.DB, a *ActivityLog) error {
 	_, err := db.Exec(`UPDATE activityLogs SET userId=?, entityType=?, entityId=?, action=?, timestampUnix=? WHERE logId=?`,
 		a.UserID, a.EntityType, a.EntityID, a.Action, a.TimestampUnix, a.LogID)
 	return err
 }
 
+// DeleteActivityLog removes an activity log from the database by logId.
+// Returns error if deletion fails.
 func DeleteActivityLog(db *sql.DB, id int) error {
 	_, err := db.Exec(`DELETE FROM activityLogs WHERE logId=?`, id)
 	return err
 }
 
+// GetAllActivityLogs retrieves all activity logs from the database.
+// Returns a slice of ActivityLog and error if query fails.
 func GetAllActivityLogs(db *sql.DB) ([]ActivityLog, error) {
 	rows, err := db.Query(`SELECT logId, userId, entityType, entityId, action, timestampUnix FROM activityLogs`)
 	if err != nil {
@@ -165,6 +189,8 @@ func GetAllActivityLogs(db *sql.DB) ([]ActivityLog, error) {
 	return out, nil
 }
 
+// GetActivityLogByID retrieves an activity log by logId from the database.
+// Returns pointer to ActivityLog and error if not found or query fails.
 func GetActivityLogByID(db *sql.DB, id int) (*ActivityLog, error) {
 	var a ActivityLog
 	err := db.QueryRow(`SELECT logId, userId, entityType, entityId, action, timestampUnix FROM activityLogs WHERE logId=?`, id).

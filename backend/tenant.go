@@ -8,6 +8,12 @@
 
 package main
 
+// Package-level summary:
+// This file implements tenant CRUD HTTP handlers and database helpers for
+// creating, reading, updating, and deleting tenant records. Handlers include
+// CreateTenantHandler, GetTenantHandler, UpdateTenantHandler, DeleteTenantHandler.
+// DB helpers: CreateTenant, GetAllTenants, GetTenantByID, UpdateTenant, DeleteTenant.
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -28,6 +34,8 @@ type Tenant struct {
 
 // == Handlers =====================================================================
 // POST
+// CreateTenantHandler returns an HTTP handler for creating a new tenant.
+// Accepts a JSON body, validates required fields, inserts into DB, and responds with the created tenant.
 func CreateTenantHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Only allow POST
@@ -65,6 +73,8 @@ func CreateTenantHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // GET
+// GetTenantHandler returns an HTTP handler for retrieving tenants.
+// If no tenantId is provided, returns all tenants; otherwise, returns the tenant with the given ID.
 func GetTenantHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Expect tenantId in query param
@@ -103,6 +113,8 @@ func GetTenantHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // PUT
+// UpdateTenantHandler returns an HTTP handler for updating a tenant.
+// Accepts a JSON body, validates tenantId, updates the DB, and responds with status.
 func UpdateTenantHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
@@ -132,6 +144,8 @@ func UpdateTenantHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // DELETE
+// DeleteTenantHandler returns an HTTP handler for deleting a tenant by ID.
+// Accepts a DELETE request, removes the tenant from DB, and responds with status.
 func DeleteTenantHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
@@ -156,6 +170,8 @@ func DeleteTenantHandler(db *sql.DB) http.HandlerFunc {
 
 // == SQL Queries =====================================================================
 
+// CreateTenant inserts a new tenant into the database.
+// Returns the new tenant ID and error if insertion fails.
 func CreateTenant(db *sql.DB, t *Tenant) (int, error) {
 	res, err := db.Exec(`INSERT INTO tenants (tenantFirstName, tenantLastName, tenantEmailAddress, tenantPhoneNumber)
 	VALUES (?, ?, ?, ?)`, t.TenantFirstName, t.TenantLastName, t.TenantEmail, t.TenantPhone)
@@ -165,17 +181,24 @@ func CreateTenant(db *sql.DB, t *Tenant) (int, error) {
 	id, _ := res.LastInsertId()
 	return int(id), nil
 }
+
+// UpdateTenant updates an existing tenant in the database.
+// Returns error if update fails.
 func UpdateTenant(db *sql.DB, t *Tenant) error {
 	_, err := db.Exec(`UPDATE tenants SET tenantFirstName=?, tenantLastName=?, tenantEmailAddress=?, tenantPhoneNumber=? WHERE tenantId=?`,
 		t.TenantFirstName, t.TenantLastName, t.TenantEmail, t.TenantPhone, t.TenantID)
 	return err
 }
 
+// DeleteTenant removes a tenant from the database by tenantId.
+// Returns error if deletion fails.
 func DeleteTenant(db *sql.DB, id int) error {
 	_, err := db.Exec(`DELETE FROM tenants WHERE tenantId=?`, id)
 	return err
 }
 
+// GetAllTenants retrieves all tenants from the database.
+// Returns a slice of Tenant and error if query fails.
 func GetAllTenants(db *sql.DB) ([]Tenant, error) {
 	rows, err := db.Query(`SELECT tenantId, tenantFirstName, tenantLastName, tenantEmailAddress, tenantPhoneNumber FROM tenants`)
 	if err != nil {
@@ -194,6 +217,8 @@ func GetAllTenants(db *sql.DB) ([]Tenant, error) {
 	return out, nil
 }
 
+// GetTenantByID retrieves a tenant by tenantId from the database.
+// Returns pointer to Tenant and error if not found or query fails.
 func GetTenantByID(db *sql.DB, id int) (*Tenant, error) {
 	var t Tenant
 	err := db.QueryRow(`SELECT tenantId, tenantFirstName, tenantLastName, tenantEmailAddress, tenantPhoneNumber FROM tenants WHERE tenantId=?`, id).

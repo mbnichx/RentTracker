@@ -8,6 +8,12 @@
 
 package main
 
+// Package-level summary:
+// This file implements property unit CRUD HTTP handlers and database helpers for
+// creating, reading, updating, and deleting property unit records. Handlers include
+// CreatePropertyUnitHandler, GetPropertyUnitHandler, UpdatePropertyUnitHandler, DeletePropertyUnitHandler.
+// DB helpers: CreatePropertyUnit, GetAllPropertyUnits, GetPropertyUnitsByID, UpdatePropertyUnit, DeletePropertyUnit.
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -30,6 +36,8 @@ type PropertyUnit struct {
 
 // == Handlers =====================================================================
 // POST
+// CreatePropertyUnitHandler returns an HTTP handler for creating a new property unit.
+// Accepts a JSON body, validates required fields, inserts into DB, and responds with the created unit.
 func CreatePropertyUnitHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -56,6 +64,8 @@ func CreatePropertyUnitHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // GET
+// GetPropertyUnitHandler returns an HTTP handler for retrieving property units.
+// If no ID is provided, returns all units; otherwise, returns the unit(s) with the given ID.
 func GetPropertyUnitHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := strings.TrimPrefix(r.URL.Path, "/units/")
@@ -83,6 +93,8 @@ func GetPropertyUnitHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // PUT
+// UpdatePropertyUnitHandler returns an HTTP handler for updating a property unit.
+// Accepts a JSON body, validates propertyUnitId, updates the DB, and responds with status.
 func UpdatePropertyUnitHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
@@ -107,6 +119,8 @@ func UpdatePropertyUnitHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // DELETE
+// DeletePropertyUnitHandler returns an HTTP handler for deleting a property unit by ID.
+// Accepts a DELETE request, removes the unit from DB, and responds with status.
 func DeletePropertyUnitHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
@@ -129,6 +143,8 @@ func DeletePropertyUnitHandler(db *sql.DB) http.HandlerFunc {
 
 // == SQL Queries =====================================================================
 
+// CreatePropertyUnit inserts a new property unit into the database.
+// Returns the new unit ID and error if insertion fails.
 func CreatePropertyUnit(db *sql.DB, u *PropertyUnit) (int, error) {
 	res, err := db.Exec(`INSERT INTO propertyUnits (propertyId, propertyUnitNumber, propertyUnitBeds, propertyUnitBaths, propertyUnitSqFt, propertyUnitRentDefault, propertyUnitNotes)
 	VALUES (?, ?, ?, ?, ?, ?, ?)`, u.PropertyID, u.PropertyUnitNumber, u.PropertyUnitBeds, u.PropertyUnitBaths, u.PropertyUnitSqFt, u.PropertyUnitRentDefault, u.PropertyUnitNotes)
@@ -139,17 +155,23 @@ func CreatePropertyUnit(db *sql.DB, u *PropertyUnit) (int, error) {
 	return int(id), nil
 }
 
+// UpdatePropertyUnit updates an existing property unit in the database.
+// Returns error if update fails.
 func UpdatePropertyUnit(db *sql.DB, u *PropertyUnit) error {
 	_, err := db.Exec(`UPDATE propertyUnits SET propertyId=?, propertyUnitNumber=?, propertyUnitBeds=?, propertyUnitBaths=?, propertyUnitSqFt=?, propertyUnitRentDefault=?, propertyUnitNotes=? WHERE propertyUnitId=?`,
 		u.PropertyID, u.PropertyUnitNumber, u.PropertyUnitBeds, u.PropertyUnitBaths, u.PropertyUnitSqFt, u.PropertyUnitRentDefault, u.PropertyUnitNotes, u.PropertyUnitID)
 	return err
 }
 
+// DeletePropertyUnit removes a property unit from the database by propertyUnitId.
+// Returns error if deletion fails.
 func DeletePropertyUnit(db *sql.DB, id int) error {
 	_, err := db.Exec(`DELETE FROM propertyUnits WHERE propertyUnitId=?`, id)
 	return err
 }
 
+// GetAllPropertyUnits retrieves all property units from the database.
+// Returns a slice of PropertyUnit and error if query fails.
 func GetAllPropertyUnits(db *sql.DB) ([]PropertyUnit, error) {
 	rows, err := db.Query(`SELECT propertyUnitId, propertyId, propertyUnitNumber, propertyUnitBeds, propertyUnitBaths, propertyUnitSqFt, propertyUnitRentDefault, propertyUnitNotes FROM propertyUnits`)
 	if err != nil {
@@ -168,6 +190,8 @@ func GetAllPropertyUnits(db *sql.DB) ([]PropertyUnit, error) {
 	return out, nil
 }
 
+// GetPropertyUnitsByID retrieves property units by propertyId from the database.
+// Returns a slice of PropertyUnit and error if not found or query fails.
 func GetPropertyUnitsByID(db *sql.DB, id int) ([]PropertyUnit, error) {
 	rows, err := db.Query(`SELECT propertyUnitId, propertyId, propertyUnitNumber, propertyUnitBeds, propertyUnitBaths, propertyUnitSqFt, propertyUnitRentDefault, propertyUnitNotes FROM propertyUnits WHERE propertyId=?`, id)
 	if err != nil {

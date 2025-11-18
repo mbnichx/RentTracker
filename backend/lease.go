@@ -8,6 +8,12 @@
 
 package main
 
+// Package-level summary:
+// This file implements lease CRUD HTTP handlers and database helpers for
+// creating, reading, updating, and deleting lease records. Handlers include
+// CreateLeaseHandler, GetLeaseHandler, UpdateLeaseHandler, DeleteLeaseHandler.
+// DB helpers: CreateLease, GetAllLeases, GetLeaseByID, UpdateLease, DeleteLease.
+
 import (
 	"database/sql"
 	"encoding/json"
@@ -33,6 +39,8 @@ type Lease struct {
 
 // == Handlers ====================================================================
 // POST
+// CreateLeaseHandler returns an HTTP handler for creating a new lease.
+// Accepts a JSON body, validates required fields, inserts into DB, and responds with the created lease.
 func CreateLeaseHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -58,6 +66,8 @@ func CreateLeaseHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// GetLeaseHandler returns an HTTP handler for retrieving leases.
+// If no ID is provided, returns all leases; otherwise, returns the lease with the given ID.
 func GetLeaseHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := strings.TrimPrefix(r.URL.Path, "/leases/")
@@ -84,6 +94,8 @@ func GetLeaseHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// UpdateLeaseHandler returns an HTTP handler for updating a lease.
+// Accepts a JSON body, validates leaseId, updates the DB, and responds with status.
 func UpdateLeaseHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPut {
@@ -107,6 +119,8 @@ func UpdateLeaseHandler(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// DeleteLeaseHandler returns an HTTP handler for deleting a lease by ID.
+// Accepts a DELETE request, removes the lease from DB, and responds with status.
 func DeleteLeaseHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
@@ -128,6 +142,8 @@ func DeleteLeaseHandler(db *sql.DB) http.HandlerFunc {
 }
 
 // == SQL Queries =================================================================
+// CreateLease inserts a new lease into the database.
+// Returns the new lease ID and error if insertion fails.
 func CreateLease(db *sql.DB, l *Lease) (int, error) {
 	res, err := db.Exec(`INSERT INTO leases (tenantId, propertyUnitId, leaseStartUnix, leaseEndUnix, leaseRentAmount, leaseSecurityDeposit, leaseDocumentLink, leaseStatus)
 	VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, l.TenantID, l.PropertyUnitID, l.LeaseStartUnix, l.LeaseEndUnix, l.LeaseRentAmount, l.LeaseSecurityDeposit, l.LeaseDocumentLink, l.LeaseStatus)
@@ -138,6 +154,8 @@ func CreateLease(db *sql.DB, l *Lease) (int, error) {
 	return int(id), nil
 }
 
+// GetAllLeases retrieves all leases from the database.
+// Returns a slice of Lease and error if query fails.
 func GetAllLeases(db *sql.DB) ([]Lease, error) {
 	rows, err := db.Query(`SELECT leaseId, tenantId, propertyUnitId, leaseStartUnix, leaseEndUnix, leaseRentAmount, leaseSecurityDeposit, leaseDocumentLink, leaseStatus FROM leases`)
 	if err != nil {
@@ -156,6 +174,8 @@ func GetAllLeases(db *sql.DB) ([]Lease, error) {
 	return out, nil
 }
 
+// GetLeaseByID retrieves a lease by leaseId from the database.
+// Returns pointer to Lease and error if not found or query fails.
 func GetLeaseByID(db *sql.DB, id int) (*Lease, error) {
 	var l Lease
 	err := db.QueryRow(`SELECT leaseId, tenantId, propertyUnitId, leaseStartUnix, leaseEndUnix, leaseRentAmount, leaseSecurityDeposit, leaseDocumentLink, leaseStatus FROM leases WHERE leaseId=?`, id).
@@ -166,12 +186,16 @@ func GetLeaseByID(db *sql.DB, id int) (*Lease, error) {
 	return &l, nil
 }
 
+// UpdateLease updates an existing lease in the database.
+// Returns error if update fails.
 func UpdateLease(db *sql.DB, l *Lease) error {
 	_, err := db.Exec(`UPDATE leases SET tenantId=?, propertyUnitId=?, leaseStartUnix=?, leaseEndUnix=?, leaseRentAmount=?, leaseSecurityDeposit=?, leaseDocumentLink=?, leaseStatus=? WHERE leaseId=?`,
 		l.TenantID, l.PropertyUnitID, l.LeaseStartUnix, l.LeaseEndUnix, l.LeaseRentAmount, l.LeaseSecurityDeposit, l.LeaseDocumentLink, l.LeaseStatus, l.LeaseID)
 	return err
 }
 
+// DeleteLease removes a lease from the database by leaseId.
+// Returns error if deletion fails.
 func DeleteLease(db *sql.DB, id int) error {
 	_, err := db.Exec(`DELETE FROM leases WHERE leaseId=?`, id)
 	return err
