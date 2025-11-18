@@ -1,3 +1,11 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */ 
+
 import apiRequest from "./client";
 
 // Unit represents a rentable unit within a property.

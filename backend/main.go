@@ -1,3 +1,11 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */
+
 package main
 
 import (
@@ -8,6 +16,7 @@ import (
 )
 
 func main() {
+	// Open SQLite database file
 	db, err := sql.Open("sqlite", "../rt.db")
 	if err != nil {
 		log.Fatal("open db:", err)
@@ -19,73 +28,65 @@ func main() {
 		log.Fatal("enable fk:", err)
 	}
 
-	// // Initialize schema (creates tables if not exists)
-	// if err := InitSchema(db); err != nil {
-	// 	log.Fatal("init schema:", err)
-	// }
-
 	mux := http.NewServeMux()
 
-	// Register
+	// Register new user endpoint
 	mux.Handle("/users", CreateUserHandler(db))
 
-	// Login
+	// Login endpoint
 	mux.Handle("/login", LoginHandler(db))
 
-	// Dashboard
+	// Dashboard endpoints
 	mux.Handle("/overduePayments", GetOverduePaymentsHandler(db))
 	mux.Handle("/maintenanceRequestStatus", GetMaintenanceRequestsHandler(db))
 	mux.Handle("/leaseOverview", GetLeasesHandler(db))
 
-	// Rent
+	// Rent endpoints
 	mux.Handle("/upcomingPayments", GetUpcomingRentHandler(db))
 	mux.Handle("/payments", CreatePaymentHandler(db))
 
-	// helpers: POST endpoints for create, GET for listing/single,
-	// PUT for update, DELETE for delete.
-	// USERS
-
+	// User endpoints
 	mux.Handle("/users/", GetUserHandler(db))
 	mux.Handle("/users/me", GetCurrentUserHandler(db))
 	mux.Handle("/users/update", UpdateUserHandler(db))
 	mux.Handle("/users/delete/", DeleteUserHandler(db))
 
-	// PROPERTIES
+	// Property endpoints
 	mux.Handle("/properties", CreatePropertyHandler(db))
 	mux.Handle("/properties/", GetPropertyHandler(db))
 	mux.Handle("/properties/update", UpdatePropertyHandler(db))
 	mux.Handle("/properties/delete/", DeletePropertyHandler(db))
 
-	// UNITS
+	// Unit endpoints
 	mux.Handle("/units", CreatePropertyUnitHandler(db))
 	mux.Handle("/units/", GetPropertyUnitHandler(db))
 	mux.Handle("/units/update", UpdatePropertyUnitHandler(db))
 	mux.Handle("/units/delete/", DeletePropertyUnitHandler(db))
 
-	// TENANTS
+	// Tenant endpoints
 	mux.Handle("/tenants", CreateTenantHandler(db))
 	mux.Handle("/tenants/", GetTenantHandler(db))
 	mux.Handle("/tenants/update", UpdateTenantHandler(db))
 	mux.Handle("/tenants/delete/", DeleteTenantHandler(db))
 
-	// LEASES
+	// Lease endpoints
 	mux.Handle("/leases", CreateLeaseHandler(db))
 	mux.Handle("/leases/", GetLeaseHandler(db))
 	mux.Handle("/leases/update", UpdateLeaseHandler(db))
 	mux.Handle("/leases/delete/", DeleteLeaseHandler(db))
 
-	// PAYMENTS
+	// Payment endpoints
 	mux.Handle("/payments/", GetPaymentHandler(db))
 	mux.Handle("/payments/update", UpdatePaymentHandler(db))
 	mux.Handle("/payments/delete/", DeletePaymentHandler(db))
 
-	// MAINTENANCE
+	// Maintenance endpoints
 	mux.Handle("/maintenance", CreateMaintenanceHandler(db))
 	mux.Handle("/maintenance/", GetMaintenanceHandler(db))
 	mux.Handle("/maintenance/update", UpdateMaintenanceHandler(db))
 	mux.Handle("/maintenance/delete/", DeleteMaintenanceHandler(db))
 
-	// ACTIVITY LOGS
+	// Activity log endpoints
 	mux.Handle("/activity", CreateActivityLogHandler(db))
 	mux.Handle("/activity/", GetActivityLogHandler(db))
 	mux.Handle("/activity/update", UpdateActivityLogHandler(db))

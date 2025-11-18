@@ -1,3 +1,11 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */ 
+
 import { Alert } from "react-native";
 
 // Base URL for API requests. This is currently set to a local LAN IP used in

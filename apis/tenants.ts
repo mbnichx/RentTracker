@@ -1,3 +1,11 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */ 
+
 import apiRequest from "./client";
 
 // Tenant record structure used by the API layer.

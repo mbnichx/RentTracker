@@ -1,3 +1,17 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */ 
+
+/**
+ * Maintenance screen — shows active and all maintenance requests with a
+ * simple status filter. The UI uses a compact DropDownPicker instance to
+ * select the status (All/Open/In Progress/Closed) and memoized lists to
+ * compute active and filtered requests.
+ */
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -6,10 +20,12 @@ import apiRequest from "../../apis/client";
 import { styles } from "./style";
 
 export default function MaintenanceScreen() {
+  // Full set of maintenance requests returned by the server
   const [currMaintenanceReqs, setCurrMaintenanceReqs] = useState<any[]>([]);
+  // Current filter selection shown in the dropdown
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
 
-  // dropdown state
+  // DropDownPicker local state (required by the component)
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([
     { label: "All", value: "All" },
@@ -21,6 +37,7 @@ export default function MaintenanceScreen() {
   useEffect(() => {
     const fetchMaintenanceData = async () => {
       try {
+        // Single endpoint that returns the current status list
         const [currMaintenanceReqs] = await Promise.all([
           apiRequest("/maintenanceRequestStatus", "GET"),
         ]);
@@ -33,6 +50,7 @@ export default function MaintenanceScreen() {
     fetchMaintenanceData();
   }, []);
 
+  // Compute active requests (open + in progress) using useMemo for perf
   const activeRequests = useMemo(() => {
     return currMaintenanceReqs.filter(
       (item) =>
@@ -41,6 +59,7 @@ export default function MaintenanceScreen() {
     );
   }, [currMaintenanceReqs]);
 
+  // Apply the selected status filter or return all when "All" is selected
   const filteredRequests = useMemo(() => {
     if (selectedStatus === "All") return currMaintenanceReqs;
     return currMaintenanceReqs.filter(

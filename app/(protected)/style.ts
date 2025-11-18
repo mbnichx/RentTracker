@@ -1,3 +1,16 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */ 
+
+/**
+ * Shared styles for the protected screens (dashboard, rent, maintenance,
+ * tenants, settings). Kept in a single file to ensure a consistent layout
+ * and visual rhythm across those screens.
+ */
 import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
@@ -68,10 +81,12 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#d32f2f",
   },
-  details: {                  // Relevant info., ex. maintenance request description
+  // Small descriptive text used for details like descriptions and dates
+  details: {
     color: "#555",
   },
-  emptyText: {                // Placeholder text
+  // Styling for empty-state placeholder strings
+  emptyText: {
     fontStyle: "italic",
     color: "#555",
   },

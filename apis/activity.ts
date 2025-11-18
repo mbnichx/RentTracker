@@ -1,3 +1,11 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */ 
+
 // Thin API wrapper for activity-related endpoints.
 // Uses the shared `apiRequest` helper to perform HTTP requests to the backend.
 import apiRequest from "./client";

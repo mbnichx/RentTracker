@@ -1,3 +1,17 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */ 
+
+/**
+ * Rent screen — shows overdue and upcoming rent payments. This file defines a
+ * small `RentPayment` type used for local rendering, fetches two endpoints
+ * (`/overduePayments` and `/upcomingPayments`), and renders each row with a
+ * small icon indicating status.
+ */
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
@@ -5,6 +19,8 @@ import { ScrollView, Text, View } from "react-native";
 import apiRequest from "../../apis/client";
 import { styles } from "./style";
 
+// Local rendering shape for payments. The backend may return additional
+// fields; adapt this type if you add stricter typing across the app.
 type RentPayment = {
   firstName: string;
   lastName: string;
@@ -20,6 +36,7 @@ export default function RentScreen() {
   const [upcoming, setUpcoming] = useState<RentPayment[]>([]);
 
   useEffect(() => {
+    // Fetch overdue and upcoming payments on mount
     async function fetchData() {
       try {
         const overdueData = await apiRequest("/overduePayments");
@@ -33,12 +50,15 @@ export default function RentScreen() {
     fetchData();
   }, []);
 
+  // Helper to format a Unix timestamp (in seconds) into a readable date
   const formatDate = (unix?: number) => {
     if (!unix) return "No payment";
     const date = new Date(unix * 1000);
     return date.toLocaleDateString();
   };
 
+  // Renders a single row for the payments list. The icon and color vary by
+  // payment status so the user can quickly scan the list.
   const renderRow = (item: RentPayment, idx: number) => {
     let color = "#000";
     let icon = null;

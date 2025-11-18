@@ -1,3 +1,18 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */ 
+
+/**
+ * Tenants screen — displays a list of current tenants. The screen fetches
+ * lease overview data from the backend which includes tenant name and their
+ * unit information. The component keeps the UI intentionally simple and
+ * renders the returned objects directly; add stronger typing if you
+ * formalize the API shapes later.
+ */
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -5,11 +20,13 @@ import apiRequest from "../../apis/client";
 import { styles } from "./style";
 
 export default function TenantsScreen() {
+  // Tenant array returned by the /leaseOverview endpoint
   const [tenants, setTenants] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchTenants = async () => {
       try {
+        // Lease overview endpoint contains tenant contact and lease dates
         const res = await apiRequest("/leaseOverview", "GET");
         setTenants(res || []);
       } catch (err) {

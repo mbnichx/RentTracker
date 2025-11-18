@@ -1,3 +1,12 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */ 
+
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -10,22 +19,30 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import apiRequest from "../apis/client";
 import { useAuth } from "../contexts/AuthContext";
 
+/**
+ * Login screen — authenticates a user and stores the returned token in
+ * AuthContext. The screen uses `apiRequest` to POST credentials to `/login`.
+ * On success it calls `login(token)` from context and navigates into the
+ * protected tab layout.
+ */
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
   const { login } = useAuth();
 
+  // Attempts to authenticate with the backend. Errors are surfaced via
+  // Alert and logged to the console for debugging during development.
   async function handleLogin() {
     try {
       const res = await apiRequest("/login", "POST", { email, password });
 
       if (res.token) {
         await login(res.token);
+        // Replace the stack so users can't go back to the login screen
         router.replace("/(protected)/dashboard");
       } else {
         Alert.alert("Login failed", "No token returned from server.");
@@ -51,6 +68,7 @@ export default function LoginScreen() {
           <Text style={styles.title}>RentTracker</Text>
           <Text style={styles.subtitle}>Login to continue</Text>
 
+          {/* Email input — no auto-capitalization and email keyboard */}
           <TextInput
             placeholder="Email"
             value={email}
@@ -60,6 +78,7 @@ export default function LoginScreen() {
             keyboardType="email-address"
             placeholderTextColor="#999"
           />
+          {/* Password input — secure text entry */}
           <TextInput
             placeholder="Password"
             value={password}
@@ -88,6 +107,9 @@ export default function LoginScreen() {
   );
 }
 
+// Local styles for the login screen. Kept inline to avoid creating a shared
+// file for two small screens (Login/Register) — move into a shared styles
+// module if these get reused elsewhere.
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,

@@ -1,3 +1,21 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */ 
+
+/**
+ * Dashboard screen — aggregates several small datasets used to give the user a
+ * quick overview (overdue payments, maintenance requests, and active leases).
+ *
+ * This component uses `apiRequest` directly to fetch three endpoints in
+ * parallel. The responses are stored in local state and rendered into simple
+ * list cards. The screen is intentionally lightweight — the individual items
+ * are rendered inline and assume the backend returns objects with the
+ * fields referenced below (firstName, lastName, address, unit, etc.).
+ */
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -5,11 +23,14 @@ import apiRequest from "../../apis/client";
 import { styles } from "./style";
 
 export default function DashboardScreen() {
+  // Local UI state for each dataset. Using `any[]` keeps this file simple
+  // — consider adding typed response shapes for stricter type-safety later.
   const [overduePayments, setOverduePayments] = useState<any[]>([]);
   const [maintenanceRequests, setMaintenanceRequests] = useState<any[]>([]);
   const [leases, setLeases] = useState<any[]>([]);
 
   useEffect(() => {
+    // Fetch the three dashboard endpoints in parallel for speed.
     const fetchDashboardData = async () => {
       try {
         const [overdueRes, maintenanceRes, leasesRes] = await Promise.all([
@@ -22,6 +43,7 @@ export default function DashboardScreen() {
         setMaintenanceRequests(maintenanceRes || []);
         setLeases(leasesRes || []);
       } catch (err) {
+        // Keep the UI stable and log the issue for debugging
         console.error("Dashboard fetch error:", err);
       } 
     };

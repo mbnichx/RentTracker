@@ -1,3 +1,11 @@
+/*
+ * -----------------------------------------------------------
+ * Author: Madison Nichols
+ * Affiliation: WVU Graduate Student
+ * Course: SENG 564
+ * -----------------------------------------------------------
+ */ 
+
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -13,6 +21,13 @@ import {
 } from "react-native";
 import { createUser } from "../apis/users";
 
+/**
+ * Registration screen — collects user details and posts them to the server
+ * using `createUser`. On success the user is redirected to the login screen.
+ *
+ * Note: passwords are sent to the backend here; ensure HTTPS is used in
+ * production and do not log the password anywhere.
+ */
 export default function RegisterScreen() {
   const [userFirstName, setFirstName] = useState("");
   const [userLastName, setLastName] = useState("");
@@ -23,6 +38,8 @@ export default function RegisterScreen() {
 
   const router = useRouter();
 
+  // Calls the API helper to create a user. Uses Alert to show success or
+  // the server-provided error message.
   async function handleRegister() {
     try {
       await createUser({
@@ -55,6 +72,7 @@ export default function RegisterScreen() {
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>Join us to get started</Text>
 
+          {/* Basic profile inputs */}
           <TextInput
             style={styles.input}
             placeholder="First Name"
@@ -114,6 +132,7 @@ export default function RegisterScreen() {
   );
 }
 
+// Local styles mirrored from LoginScreen to keep a consistent design.
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
