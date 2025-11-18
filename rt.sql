@@ -105,33 +105,51 @@ CREATE TABLE IF NOT EXISTS activityLogs (
 -- Overdue Rent (dashboard)
 DROP VIEW IF EXISTS overduePayments;
 
+-- Overdue: No payment for the current month (from the 1st)
 CREATE VIEW overduePayments AS
 SELECT 
+    l.leaseId as leaseId,
     t.tenantFirstName AS firstName,
     t.tenantLastName AS lastName,
     p.propertyStreetAddress AS address,
     u.propertyUnitNumber AS unit,
     l.leaseRentAmount AS rentAmount,
-    COALESCE(MAX(pay.paymentDateUnix), 0) AS lastPaymentUnix,
+    COALESCE(
+        (
+            SELECT MAX(pay.paymentDateUnix)
+            FROM payments pay
+            WHERE pay.leaseId = l.leaseId
+                AND strftime('%Y-%m', datetime(pay.paymentDateUnix, 'unixepoch')) = strftime('%Y-%m', 'now')
+        ), 0
+    ) AS lastPaymentUnix,
     CASE 
-        WHEN MAX(pay.paymentDateUnix) IS NULL THEN 'No payment recorded'
-        WHEN (strftime('%s','now') - MAX(pay.paymentDateUnix)) > (30 * 24 * 60 * 60) THEN 'Overdue'
+        WHEN (
+            SELECT COUNT(*)
+            FROM payments pay
+            WHERE pay.leaseId = l.leaseId
+                AND strftime('%Y-%m', datetime(pay.paymentDateUnix, 'unixepoch')) = strftime('%Y-%m', 'now')
+        ) = 0 THEN 'Overdue'
         ELSE 'Current'
     END AS paymentStatus
 FROM leases l
 JOIN tenants t ON l.tenantId = t.tenantId
 JOIN propertyUnits u ON l.propertyUnitId = u.propertyUnitId
 JOIN properties p ON u.propertyId = p.propertyId
-LEFT JOIN payments pay ON l.leaseId = pay.leaseId
 WHERE l.leaseStatus = 'active'
-GROUP BY l.leaseId
-HAVING paymentStatus IN ('Overdue', 'No payment recorded');
+    -- Only include leases that do NOT have a payment for the current month
+    AND (
+        SELECT COUNT(*)
+        FROM payments pay
+        WHERE pay.leaseId = l.leaseId
+            AND strftime('%Y-%m', datetime(pay.paymentDateUnix, 'unixepoch')) = strftime('%Y-%m', 'now')
+    ) = 0;
 
 
 -- Maintenance requests (dashboard)
 DROP VIEW IF EXISTS maintenanceRequestsView;
 CREATE VIEW maintenanceRequestsView AS
 SELECT
+    m.maintenanceRequestId AS maintenanceRequestId,
     t.tenantFirstName AS firstName,
     t.tenantLastName AS lastName,
     p.propertyStreetAddress AS address,
@@ -167,22 +185,34 @@ JOIN properties p ON u.propertyId = p.propertyId;
 -- Upcoming Rent (next due payments)
 DROP VIEW IF EXISTS upcomingPayments;
 
+-- Upcoming: Rent for next month not yet paid
 CREATE VIEW upcomingPayments AS
 SELECT 
+    l.leaseId as leaseId,
     t.tenantFirstName AS firstName,
     t.tenantLastName AS lastName,
     p.propertyStreetAddress AS address,
     u.propertyUnitNumber AS unit,
     l.leaseRentAmount AS rentAmount,
-    COALESCE(MAX(pay.paymentDateUnix), 0) AS lastPaymentUnix,
+    COALESCE(
+        (
+            SELECT MAX(pay.paymentDateUnix)
+            FROM payments pay
+            WHERE pay.leaseId = l.leaseId
+                AND strftime('%Y-%m', datetime(pay.paymentDateUnix, 'unixepoch')) = strftime('%Y-%m', 'now')
+        ), 0
+    ) AS lastPaymentUnix,
     CASE 
-        WHEN MAX(pay.paymentDateUnix) >= strftime('%s','now') THEN 'Paid'
-        ELSE 'Due'
+        WHEN (
+            SELECT COUNT(*)
+            FROM payments pay
+            WHERE pay.leaseId = l.leaseId
+                AND strftime('%Y-%m', datetime(pay.paymentDateUnix, 'unixepoch')) = strftime('%Y-%m', 'now')
+        ) = 0 THEN 'Due'
+        ELSE 'Paid'
     END AS paymentStatus
 FROM leases l
 JOIN tenants t ON l.tenantId = t.tenantId
 JOIN propertyUnits u ON l.propertyUnitId = u.propertyUnitId
 JOIN properties p ON u.propertyId = p.propertyId
-LEFT JOIN payments pay ON l.leaseId = pay.leaseId
-WHERE l.leaseStatus = 'active'
-GROUP BY l.leaseId;
+WHERE l.leaseStatus = 'active';

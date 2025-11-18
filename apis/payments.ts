@@ -9,7 +9,7 @@
 import apiRequest from "./client";
 
 // Payment record shape used by the API layer.
-type Payment = {
+export type Payment = {
   paymentId: number;
   leaseId: number;
   paymentAmount: number;

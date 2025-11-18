@@ -19,6 +19,7 @@ import (
 )
 
 type RentPayment struct {
+	LeaseId         int     `json:"leaseId"`
 	FirstName       string  `json:"firstName"`
 	LastName        string  `json:"lastName"`
 	Address         string  `json:"address"`
@@ -32,7 +33,7 @@ type RentPayment struct {
 // Responds with a list of upcoming rent payments for the dashboard UI.
 func GetUpcomingRentHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		rows, err := db.Query(`SELECT firstName,lastName,address,unit,rentAmount,lastPaymentUnix,paymentStatus FROM upcomingPayments`)
+		rows, err := db.Query(`SELECT leaseId, firstName,lastName,address,unit,rentAmount,lastPaymentUnix,paymentStatus FROM upcomingPayments`)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -42,7 +43,7 @@ func GetUpcomingRentHandler(db *sql.DB) http.HandlerFunc {
 		var payments []RentPayment
 		for rows.Next() {
 			var p RentPayment
-			if err := rows.Scan(&p.FirstName, &p.LastName, &p.Address, &p.Unit, &p.RentAmount, &p.LastPaymentUnix, &p.PaymentStatus); err != nil {
+			if err := rows.Scan(&p.LeaseId, &p.FirstName, &p.LastName, &p.Address, &p.Unit, &p.RentAmount, &p.LastPaymentUnix, &p.PaymentStatus); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
